@@ -6,7 +6,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/metalblueberry/Halite-bot/pkg/hlt"
+	"github.com/metalblueberry/halite-bot/pkg/hlt"
 )
 
 // golang starter kit with logging and basic pathfinding
