@@ -30,11 +30,6 @@ type Entity struct {
 	ID     int
 }
 
-// Position in 2D space
-type Position struct {
-	X, Y float64
-}
-
 // Planet object from which Halite is mined
 type Planet struct {
 	Entity
@@ -44,6 +39,7 @@ type Planet struct {
 	RemainingResources float64
 	DockedShipIDs      []int
 	DockedShips        []Ship
+	InOrbitShips       []Ship
 	Owned              float64
 	Distance           float64
 }
@@ -96,6 +92,25 @@ func (entity Entity) ClosestPointTo(target Entity, minDistance float64) Entity {
 		Owner:  -1,
 		ID:     -1,
 	}
+}
+
+// VectorTo returns the distance and direction between two entities.
+func (entity Entity) VectorTo(other Entity) Entity {
+	return Entity{
+		X: other.X - entity.X,
+		Y: other.Y - entity.Y,
+	}
+}
+
+// Rotate returns the position rotated an angle from the point origin
+func (entity Entity) Rotate(origin Entity, angle float64) Entity {
+	// x2=r−u=cosβx1−sinβy1y2=t+s=sinβx1+cosβy1
+	vector := origin.VectorTo(entity)
+	cos := math.Cos(angle)
+	sin := math.Sin(angle)
+	vector.X = cos*entity.X - sin*entity.Y + origin.X
+	vector.Y = sin*entity.X + cos*entity.Y + origin.Y
+	return vector
 }
 
 // ParseShip from a slice of game state tokens
@@ -227,7 +242,7 @@ func (ship Ship) CanDock(planet Planet) bool {
 // Navigate demonstrates how the player might negotiate obsticles between
 // a ship and its target
 func (ship Ship) Navigate(target Entity, gameMap Map) string {
-	ob := gameMap.ObstaclesBetween(ship.Entity, target)
+	ob, _ := gameMap.ObstaclesBetween(ship.Entity, target)
 
 	if !ob {
 		return ship.NavigateBasic(target, gameMap)
@@ -243,6 +258,8 @@ func (ship Ship) Navigate(target Entity, gameMap Map) string {
 	bestdist := 1000.0
 	bestTarget := target
 
+
+
 	for x1 := x0; x1 <= x2; x1 += dx {
 		for y1 := y0; y1 <= y2; y1 += dy {
 			intermediateTarget := Entity{
@@ -253,9 +270,9 @@ func (ship Ship) Navigate(target Entity, gameMap Map) string {
 				Owner:  0,
 				ID:     -1,
 			}
-			ob1 := gameMap.ObstaclesBetween(ship.Entity, intermediateTarget)
+			ob1, _ := gameMap.ObstaclesBetween(ship.Entity, intermediateTarget)
 			if !ob1 {
-				ob2 := gameMap.ObstaclesBetween(intermediateTarget, target)
+				ob2, _ := gameMap.ObstaclesBetween(intermediateTarget, target)
 				if !ob2 {
 					totdist := math.Sqrt(math.Pow(x1-x0, 2)+math.Pow(y1-y0, 2)) + math.Sqrt(math.Pow(x1-x2, 2)+math.Pow(y1-y2, 2))
 					if totdist < bestdist {

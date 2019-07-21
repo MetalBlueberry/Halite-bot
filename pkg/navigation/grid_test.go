@@ -9,13 +9,12 @@ import (
 	. "github.com/onsi/gomega"
 
 	navigation "github.com/metalblueberry/halite-bot/pkg/navigation"
-	"github.com/metalblueberry/halite-bot/pkg/astar"
 )
 
 var re = regexp.MustCompile(`\s+`)
 
 func generate(data string) string {
-	return strings.TrimPrefix(re.ReplaceAllString(data, "\n"), "\n")
+	return strings.ReplaceAll(strings.TrimPrefix(re.ReplaceAllString(data, "\n"), "\n"), "O", " ")
 }
 
 var _ = Describe("Grid", func() {
@@ -26,10 +25,10 @@ var _ = Describe("Grid", func() {
 		It("Should be allocated with desired Tiles", func() {
 			grid := navigation.NewGrid(50, 50)
 			width := len(grid.Tiles)
-			Expect(width).To(Equal(grid.Width))
+			Expect(width).To(BeNumerically("==", grid.Width))
 			for _, col := range grid.Tiles {
 				height := len(col)
-				Expect(height).To(Equal(grid.Height))
+				Expect(height).To(BeNumerically("==", grid.Height))
 			}
 		})
 		Specify("Grid should be referenced by tiles", func() {
@@ -40,12 +39,12 @@ var _ = Describe("Grid", func() {
 				}
 			}
 		})
-		Specify("Tiles must store theri position", func() {
+		Specify("Tiles must store their position", func() {
 			grid := navigation.NewGrid(5, 5)
 			for y, row := range grid.Tiles {
 				for x, tile := range row {
-					Expect(tile.X).To(Equal(x))
-					Expect(tile.Y).To(Equal(y))
+					Expect(tile.X).To(BeNumerically("==", x))
+					Expect(tile.Y).To(BeNumerically("==", y))
 				}
 			}
 		})
@@ -112,11 +111,10 @@ var _ = Describe("Grid", func() {
 			grid := navigation.NewGrid(10, 3)
 			start := grid.GetTile(0, 1)
 			end := grid.GetTile(9, 1)
-			path, distance, found := astar.Path(start, end, 10)
+			path, distance, found := grid.Path(start, end, 10)
 
 			for _, step := range path {
-				t := step.(*navigation.Tile)
-				t.Type = navigation.Walked
+				step.Type = navigation.Walked
 			}
 
 			expected := generate(`
@@ -137,11 +135,10 @@ var _ = Describe("Grid", func() {
 			grid := navigation.NewGrid(20, 3)
 			start := grid.GetTile(0, 1)
 			end := grid.GetTile(19, 1)
-			path, distance, found := astar.Path(start, end, 10)
+			path, distance, found := grid.Path(start, end, 10)
 
 			for _, step := range path {
-				t := step.(*navigation.Tile)
-				t.Type = navigation.Walked
+				step.Type = navigation.Walked
 			}
 
 			expected := generate(`
@@ -163,11 +160,10 @@ var _ = Describe("Grid", func() {
 			grid.PaintPlanet(5, 4, 3)
 			start := grid.GetTile(0, 3)
 			end := grid.GetTile(10, 3)
-			path, distance, found := astar.Path(start, end, 200)
+			path, distance, found := grid.Path(start, end, 200)
 
 			for _, step := range path {
-				t := step.(*navigation.Tile)
-				t.Type = navigation.Walked
+				step.Type = navigation.Walked
 			}
 
 			expected := generate(`
@@ -190,16 +186,15 @@ var _ = Describe("Grid", func() {
 		})
 		It("Should avoid Ships", func() {
 			grid := navigation.NewGrid(19, 15)
-			grid.PaintShip(4,7,5)
-			grid.PaintShip(14,7,5)
+			grid.PaintShip(4, 7, 5)
+			grid.PaintShip(14, 7, 5)
 
 			start := grid.GetTile(9, 0)
 			end := grid.GetTile(9, 14)
-			path, distance, found := astar.Path(start, end, 200)
+			path, distance, found := grid.Path(start, end, 200)
 
 			for _, step := range path {
-				t := step.(*navigation.Tile)
-				t.Type = navigation.Walked
+				step.Type = navigation.Walked
 			}
 
 			expected := generate(`

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime/debug"
 	"strconv"
 
 	"github.com/metalblueberry/halite-bot/pkg/hlt"
@@ -13,11 +14,12 @@ import (
 // Arjun Viswanathan 2017 / github arjunvis
 
 func main() {
+
+
 	logging := true
 	botName := "GoBot"
 
 	conn := hlt.NewConnection(botName)
-	
 
 	// set up logging
 	if logging {
@@ -29,7 +31,16 @@ func main() {
 		defer f.Close()
 		log.SetOutput(f)
 	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			log.Println("stacktrace from panic: \n" + string(debug.Stack()))
+		}
+	}()
+
 	gameMap := conn.UpdateMap()
+	log.Println(gameMap.Grid.String())
+
 	gameturn := 1
 	for true {
 		gameMap = conn.UpdateMap()
@@ -41,10 +52,10 @@ func main() {
 		for i := 0; i < len(myShips); i++ {
 			ship := myShips[i]
 			if ship.DockingStatus == hlt.UNDOCKED {
-				commandQueue = append(commandQueue, hlt.StrategyBasicBot(ship, gameMap))
+				commandQueue = append(commandQueue, hlt.AstarStrategy(ship, gameMap))
 			}
 		}
-		
+
 		log.Printf("Turn %v\n", gameturn)
 		conn.SubmitCommands(commandQueue)
 		gameturn++

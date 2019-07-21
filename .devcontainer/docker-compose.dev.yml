@@ -22,13 +22,13 @@ services:
       - $HOME/.gitconfig:$HOME/.gitconfig:ro
       # user information
       - /etc/passwd:/etc/passwd:ro
-      # allow the persistence of binary tools installed in container
-      - gobin:/go/bin
+      # # allow the persistence of binary tools installed in container
+      # - gopkg:/go/pkg
     # [Optional] Required for ptrace-based debuggers like C++, Go, and Rust
     cap_add:
       - SYS_PTRACE
     security_opt:
       - seccomp:unconfined
 
-volumes:
-  gobin:  
+# volumes:
+#   gopkg:  

@@ -5,6 +5,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/metalblueberry/halite-bot/pkg/navigation"
 )
 
 // Map describes the current state of the game
@@ -13,6 +15,7 @@ type Map struct {
 	Planets             []Planet
 	Players             []Player
 	Entities            []Entity
+	Grid                *navigation.Grid
 }
 
 // Player has an ID for establishing ownership, and a number of ships
@@ -51,9 +54,10 @@ func ParseGameString(c *Connection, gameString string) Map {
 		MyID:     c.PlayerTag,
 		Width:    c.width,
 		Height:   c.height,
-		Planets:  make([]Planet, 0),
+		Planets:  nil,
 		Players:  make([]Player, numPlayers),
 		Entities: make([]Entity, 0),
+		Grid: navigation.NewGrid(c.width, c.height),
 	}
 
 	for i := 0; i < numPlayers; i++ {
@@ -61,11 +65,14 @@ func ParseGameString(c *Connection, gameString string) Map {
 		tokens = tokensnew
 		gameMap.Players[player.ID] = player
 		for j := 0; j < len(player.Ships); j++ {
+			ship := player.Ships[j].Entity
 			gameMap.Entities = append(gameMap.Entities, player.Ships[j].Entity)
+			gameMap.Grid.PaintShip(ship.X, ship.Y, 5)
 		}
 	}
 
 	numPlanets, _ := strconv.Atoi(tokens[0])
+	gameMap.Planets = make([]Planet, numPlanets)
 	tokens = tokens[1:]
 
 	for i := 0; i < numPlanets; i++ {
@@ -73,6 +80,7 @@ func ParseGameString(c *Connection, gameString string) Map {
 		tokens = tokensnew
 		gameMap.Planets = append(gameMap.Planets, planet)
 		gameMap.Entities = append(gameMap.Entities, planet.Entity)
+		gameMap.Grid.PaintPlanet(planet.Entity.X, planet.Entity.Y, planet.Entity.Radius)
 	}
 
 	return gameMap
@@ -80,7 +88,7 @@ func ParseGameString(c *Connection, gameString string) Map {
 
 // ObstaclesBetween demonstrates how the player might determine if the path
 // between two enitities is clear
-func (gameMap Map) ObstaclesBetween(start Entity, end Entity) bool {
+func (gameMap Map) ObstaclesBetween(start Entity, end Entity) (bool, Entity) {
 	x1 := start.X
 	y1 := start.Y
 	x2 := end.X
@@ -101,7 +109,7 @@ func (gameMap Map) ObstaclesBetween(start Entity, end Entity) bool {
 
 		closestDistance := end.CalculateDistanceTo(entity)
 		if closestDistance < entity.Radius+1 {
-			return true
+			return true, entity
 		}
 
 		b := -2 * (crossterms + x0*dx + y0*dy)
@@ -116,10 +124,10 @@ func (gameMap Map) ObstaclesBetween(start Entity, end Entity) bool {
 		closestDistance = math.Sqrt(math.Pow(closestX-x0, 2) * +math.Pow(closestY-y0, 2))
 
 		if closestDistance <= entity.Radius+start.Radius+1 {
-			return true
+			return true, entity
 		}
 	}
-	return false
+	return false, Entity{}
 }
 
 // NearestPlanetsByDistance orders all planets based on their proximity

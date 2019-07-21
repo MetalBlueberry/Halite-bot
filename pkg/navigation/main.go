@@ -10,14 +10,14 @@ import (
 )
 
 type Grid struct {
-	Width, Height int
+	Width, Height float64
 	Tiles         [][]*Tile
 }
 
 func NewGrid(Width, Height int) *Grid {
 	grid := &Grid{
-		Width:  Width,
-		Height: Height,
+		Width:  float64(Width),
+		Height: float64(Height),
 		Tiles:  make([][]*Tile, Height, Height),
 	}
 	for row := range grid.Tiles {
@@ -25,8 +25,8 @@ func NewGrid(Width, Height int) *Grid {
 		for col := range grid.Tiles[row] {
 			grid.Tiles[row][col] = &Tile{
 				Grid: grid,
-				X:    col,
-				Y:    row,
+				X:    float64(col),
+				Y:    float64(row),
 			}
 		}
 	}
@@ -78,15 +78,24 @@ func (g *Grid) Paint(X float64, Y float64, radius float64, value TileType) {
 	}
 }
 
-func (g *Grid) GetTile(x, y int) *Tile {
-	if x < 0 || x >= g.Width || y < 0 || y >= g.Height {
+func (g *Grid) GetTile(x, y float64) *Tile {
+	if x < 0 || x >= float64(g.Width) || y < 0 || y >= float64(g.Height) {
 		return nil
 	}
-	return g.Tiles[y][x]
+	return g.Tiles[int(y)][int(x)]
+}
+
+func (g *Grid) Path(from, to *Tile, iterations int) (path []*Tile, distance float64, found bool) {
+	result, distance, found := astar.Path(from, to, iterations)
+	path = make([]*Tile, len(result), len(result))
+	for i, step := range result {
+		path[i] = step.(*Tile)
+	}
+	return path, distance, found
 }
 
 func (g *Grid) String() string {
-	mem := make([]byte, 0, g.Width*g.Height+g.Height+g.Width)
+	mem := make([]byte, 0, int(g.Width*g.Height+g.Height+g.Width))
 	buf := bytes.NewBuffer(mem)
 
 	for _, row := range g.Tiles {
@@ -114,26 +123,26 @@ const (
 
 func (t TileType) String() string {
 	repr := map[TileType]string{
-		Empty:     "O",
-		Walked:    "*",
-		ShotRange: "#",
+		Empty:      " ",
+		Walked:     "*",
+		ShotRange:  "#",
 		ShotRange2: "%",
 		ShotRange3: "@",
-		Ship:      "V",
-		Blocked:   "X",
+		Ship:       "V",
+		Blocked:    "X",
 	}
 	return repr[t]
 }
 
 type Tile struct {
 	Type TileType
-	X    int
-	Y    int
+	X    float64
+	Y    float64
 	Grid *Grid
 }
 
 func (c *Tile) String() string {
-	return fmt.Sprintf("x:%d y:%d", c.X, c.Y)
+	return fmt.Sprintf("x:%f y:%f", c.X, c.Y)
 }
 
 // PathNeighbors returns the direct neighboring nodes of this node which
@@ -183,4 +192,18 @@ func (t *Tile) PathNeighborCost(to astar.Pather) float64 {
 func (t *Tile) PathEstimatedCost(to astar.Pather) float64 {
 	toT := to.(*Tile)
 	return math.Sqrt(math.Pow(float64(t.X-toT.X), 2) + math.Pow(float64(t.Y-toT.Y), 2))
+}
+
+// GetdirectionFromPath returns the tile at which you can move in straight line at the desired speed
+func GetDirectionFromPath(path []*Tile, speed float64) *Tile {
+	totalDistance := 0.0
+	previous := path[0]
+	for _, tile := range path[1:] {
+		totalDistance += tile.PathNeighborCost(previous)
+		if totalDistance > speed {
+			return previous
+		}
+		previous = tile
+	}
+	return previous
 }
