@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // Connection performs all of the IO operations required to communicate
@@ -55,12 +56,13 @@ func NewConnection(botName string) Connection {
 }
 
 // UpdateMap decodes the current turn's game state from a string
-func (c *Connection) UpdateMap() Map {
+func (c *Connection) UpdateMap() (Map, time.Time) {
 	log.Printf("--- NEW TURN --- \n")
 	gameString := c.getString()
+	turnStart := time.Now()
 	gameMap := ParseGameString(c, gameString)
-	log.Printf("    Parsed map")
-	return gameMap
+	log.Printf("    Parsed map in %s", time.Since(turnStart))
+	return gameMap, turnStart
 }
 
 // SubmitCommands encodes the player's commands into a string

@@ -232,6 +232,18 @@ func (ship Ship) NavigateBasic(target Entity, gameMap Map) string {
 	return ship.Thrust(speed, angle)
 }
 
+// NavigateBasic demonstrates how the player might move ships through space
+func (ship Ship) NavigateBasic2(target Entity, gameMap Map) string {
+	distance := ship.CalculateDistanceTo(target)
+	safeDistance := distance - ship.Entity.Radius - target.Radius - .1
+
+	angle := ship.CalculateAngleTo(target)
+	speed := 7.0
+
+	speed = math.Min(speed, safeDistance)
+	return ship.Thrust(speed, angle)
+}
+
 // CanDock indicates that a ship is close enough to a given planet to dock
 func (ship Ship) CanDock(planet Planet) bool {
 	dist := ship.CalculateDistanceTo(planet.Entity)
@@ -257,8 +269,6 @@ func (ship Ship) Navigate(target Entity, gameMap Map) string {
 	dy := (y2 - y0) / 5
 	bestdist := 1000.0
 	bestTarget := target
-
-
 
 	for x1 := x0; x1 <= x2; x1 += dx {
 		for y1 := y0; y1 <= y2; y1 += dy {

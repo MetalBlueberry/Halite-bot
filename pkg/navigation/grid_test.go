@@ -14,7 +14,7 @@ import (
 var re = regexp.MustCompile(`\s+`)
 
 func generate(data string) string {
-	return strings.ReplaceAll(strings.TrimPrefix(re.ReplaceAllString(data, "\n"), "\n"), "O", " ")
+	return strings.ReplaceAll(strings.TrimPrefix(re.ReplaceAllString(data, "\n"), "\n"), "O", "O")
 }
 
 var _ = Describe("Grid", func() {
@@ -67,11 +67,11 @@ var _ = Describe("Grid", func() {
 			grid := navigation.NewGrid(9, 5)
 			grid.PaintPlanet(4, 2, 1)
 			expected := generate(`
-			OOOOOOOOO
-			OOOOXOOOO
-			OOOXXXOOO
-			OOOOXOOOO
-			OOOOOOOOO
+			OOOO+OOOO
+			OOO+X+OOO
+			OO+XXX+OO
+			OOO+X+OOO
+			OOOO+OOOO
 			`)
 			result := grid.String()
 			fmt.Fprint(GinkgoWriter, result)
@@ -81,10 +81,10 @@ var _ = Describe("Grid", func() {
 			grid := navigation.NewGrid(9, 5)
 			grid.PaintPlanet(0, 0, 2)
 			expected := generate(`
-			XXXOOOOOO
-			XXOOOOOOO
-			XOOOOOOOO
-			OOOOOOOOO
+			XXX+OOOOO
+			XX+OOOOOO
+			X++OOOOOO
+			+OOOOOOOO
 			OOOOOOOOO
 			`)
 			result := grid.String()
@@ -96,10 +96,10 @@ var _ = Describe("Grid", func() {
 			grid.PaintPlanet(8, 4, 2)
 			expected := generate(`
 			OOOOOOOOO
-			OOOOOOOOO
-			OOOOOOOOX
-			OOOOOOOXX
-			OOOOOOXXX
+			OOOOOOOO+
+			OOOOOO++X
+			OOOOOO+XX
+			OOOOO+XXX
 			`)
 			result := grid.String()
 			fmt.Fprint(GinkgoWriter, result)
@@ -111,7 +111,7 @@ var _ = Describe("Grid", func() {
 			grid := navigation.NewGrid(10, 3)
 			start := grid.GetTile(0, 1)
 			end := grid.GetTile(9, 1)
-			path, distance, found := grid.Path(start, end, 10)
+			path, distance, found, _ := grid.Path(start, end, 10)
 
 			for _, step := range path {
 				step.Type = navigation.Walked
@@ -135,7 +135,7 @@ var _ = Describe("Grid", func() {
 			grid := navigation.NewGrid(20, 3)
 			start := grid.GetTile(0, 1)
 			end := grid.GetTile(19, 1)
-			path, distance, found := grid.Path(start, end, 10)
+			path, distance, found, _ := grid.Path(start, end, 10)
 
 			for _, step := range path {
 				step.Type = navigation.Walked
@@ -160,20 +160,20 @@ var _ = Describe("Grid", func() {
 			grid.PaintPlanet(5, 4, 3)
 			start := grid.GetTile(0, 3)
 			end := grid.GetTile(10, 3)
-			path, distance, found := grid.Path(start, end, 200)
+			path, distance, found, _ := grid.Path(start, end, 200)
 
 			for _, step := range path {
 				step.Type = navigation.Walked
 			}
 
 			expected := generate(`
-			OOOOO*OOOOO
-			OOO**X**OOO
-			OO*XXXXX**O
-			**OXXXXXOO*
-			OOXXXXXXXOO
-			OOOXXXXXOOO
-			OOOXXXXXOOO
+			OOO*****OOO
+			OO*++X++*OO
+			O*+XXXXX+*O
+			*O+XXXXX+O*
+			O+XXXXXXX+O
+			OO+XXXXX+OO
+			OO+XXXXX+OO
 			`)
 
 			result := grid.String()
@@ -191,7 +191,7 @@ var _ = Describe("Grid", func() {
 
 			start := grid.GetTile(9, 0)
 			end := grid.GetTile(9, 14)
-			path, distance, found := grid.Path(start, end, 200)
+			path, distance, found, _ := grid.Path(start, end, 200)
 
 			for _, step := range path {
 				step.Type = navigation.Walked
@@ -205,7 +205,7 @@ var _ = Describe("Grid", func() {
 			#########*#########
 			#########*#########
 			#########*#########
-			####V####%*###V####
+			####V###*%####V####
 			#########*#########
 			#########*#########
 			#########*#########
@@ -222,6 +222,105 @@ var _ = Describe("Grid", func() {
 			Expect(found).To(BeTrue())
 			Expect(distance).To(BeNumerically(">", 0))
 
+		})
+		FIt("Should return the best posible path", func() {
+			grid := navigation.NewGrid(19, 15)
+			grid.PaintShip(4, 7, 5)
+			grid.PaintShip(14, 7, 5)
+
+			start := grid.GetTile(9, 0)
+			end := grid.GetTile(9, 14)
+			path, distance, found, bestPath := grid.Path(start, end, 40)
+
+			for _, step := range path {
+				step.Type = navigation.Walked
+			}
+			for _, step := range bestPath {
+				step.Type = navigation.ShotRange3
+			}
+
+			expected := generate(`
+			OOOOOOOOO*OOOOOOOOO
+			OOOOOOOOO*OOOOOOOOO
+			OOOO#OOOO*OOOO#OOOO
+			O#######O*O#######O
+			#########*#########
+			#########*#########
+			#########*#########
+			####V###*%####V####
+			#########*#########
+			#########O#########
+			#########O#########
+			O#######OOO#######O
+			OOOO#OOOOOOOOO#OOOO
+			OOOOOOOOOOOOOOOOOOO
+			OOOOOOOOOOOOOOOOOOO
+			`)
+
+			result := grid.String()
+			fmt.Fprintln(GinkgoWriter, "")
+			fmt.Fprint(GinkgoWriter, result)
+			Expect(result).To(Equal(expected))
+
+			Expect(found).To(BeTrue())
+			Expect(distance).To(BeNumerically(">", 0))
+
+		})
+	})
+	Describe("When finding the dirction", func() {
+		It("Should return a point at desired distance in horizontal", func() {
+			grid := navigation.NewGrid(10, 5)
+			start := grid.GetTile(1, 2)
+			end := grid.GetTile(8, 2)
+			path, distance, found, _ := grid.Path(start, end, 200)
+			destiny := navigation.GetDirectionFromPath(path, 5)
+
+			for _, step := range path {
+				step.Type = navigation.Walked
+			}
+			destiny.Type = navigation.Ship
+
+			expected := generate(`
+			OOOOOOOOOO
+			OOOOOOOOOO
+			O*****V**O
+			OOOOOOOOOO
+			OOOOOOOOOO
+			`)
+
+			result := grid.String()
+			fmt.Fprint(GinkgoWriter, result)
+			Expect(result).To(Equal(expected))
+
+			Expect(found).To(BeTrue())
+			Expect(distance).To(BeNumerically(">", 0))
+		})
+		It("Should return a point at desired distance in diagonal", func() {
+			grid := navigation.NewGrid(10, 5)
+			start := grid.GetTile(9, 4)
+			end := grid.GetTile(0, 0)
+			path, distance, found, _ := grid.Path(start, end, 200)
+			destiny := navigation.GetDirectionFromPath(path, 5)
+
+			for _, step := range path {
+				step.Type = navigation.Walked
+			}
+			destiny.Type = navigation.Ship
+
+			expected := generate(`
+			*OOOOOOOOO
+			O***OOOOOO
+			OOOO*VOOOO
+			OOOOOO**OO
+			OOOOOOOO**
+			`)
+
+			result := grid.String()
+			fmt.Fprint(GinkgoWriter, result)
+			Expect(result).To(Equal(expected))
+
+			Expect(found).To(BeTrue())
+			Expect(distance).To(BeNumerically(">", 0))
 		})
 	})
 })

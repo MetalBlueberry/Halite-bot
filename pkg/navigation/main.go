@@ -39,6 +39,7 @@ func (g *Grid) PaintShip(X float64, Y float64, shotRange float64) {
 }
 
 func (g *Grid) PaintPlanet(X float64, Y float64, radius float64) {
+	g.Paint(X, Y, radius+1, SafeMargin)
 	g.Paint(X, Y, radius, Blocked)
 }
 
@@ -85,13 +86,17 @@ func (g *Grid) GetTile(x, y float64) *Tile {
 	return g.Tiles[int(y)][int(x)]
 }
 
-func (g *Grid) Path(from, to *Tile, iterations int) (path []*Tile, distance float64, found bool) {
-	result, distance, found := astar.Path(from, to, iterations)
+func (g *Grid) Path(from, to *Tile, iterations int) (path []*Tile, distance float64, found bool, bestPath []*Tile) {
+	result, distance, found, bestResult := astar.Path(from, to, iterations)
 	path = make([]*Tile, len(result), len(result))
 	for i, step := range result {
 		path[i] = step.(*Tile)
 	}
-	return path, distance, found
+	bestPath = make([]*Tile, len(bestResult), len(bestResult))
+	for i, step := range bestResult {
+		bestPath[i] = step.(*Tile)
+	}
+	return path, distance, found, bestPath
 }
 
 func (g *Grid) String() string {
@@ -109,22 +114,56 @@ func (g *Grid) String() string {
 	return string(data)
 }
 
+func (g *Grid) PrintDebugPath(path []*Tile, from *Tile, to *Tile) string {
+	mem := make([]byte, 0, int(g.Width*g.Height+g.Height+g.Width))
+	buf := bytes.NewBuffer(mem)
+
+	for _, row := range g.Tiles {
+		for _, col := range row {
+			if from == col {
+				buf.WriteString("V")
+				continue
+			}
+			if to == col {
+				buf.WriteString("8")
+				continue
+			}
+			isPath := false
+			for _, inPath := range path {
+				if inPath == col {
+					isPath = true
+					buf.WriteString("*")
+				}
+			}
+			if !isPath {
+				buf.WriteString(col.Type.String())
+			}
+		}
+		buf.WriteRune('\n')
+	}
+
+	data, _ := ioutil.ReadAll(buf)
+	return string(data)
+}
+
 type TileType int
 
 const (
 	Empty      TileType = 0
-	Walked     TileType = 1
-	ShotRange  TileType = 25
-	ShotRange2 TileType = 50
-	ShotRange3 TileType = 75
+	SafeMargin TileType = 1
+	Walked     TileType = 2
+	ShotRange  TileType = 3
+	ShotRange2 TileType = 6
+	ShotRange3 TileType = 9
 	Ship       TileType = 1000
 	Blocked    TileType = 1000000
 )
 
 func (t TileType) String() string {
 	repr := map[TileType]string{
-		Empty:      " ",
+		Empty:      "O",
 		Walked:     "*",
+		SafeMargin: "+",
 		ShotRange:  "#",
 		ShotRange2: "%",
 		ShotRange3: "@",
@@ -141,8 +180,12 @@ type Tile struct {
 	Grid *Grid
 }
 
-func (c *Tile) String() string {
-	return fmt.Sprintf("x:%f y:%f", c.X, c.Y)
+func (t *Tile) String() string {
+	return fmt.Sprintf("x:%f y:%f", t.X, t.Y)
+}
+
+func (t *Tile) DistanceTo(other *Tile) float64 {
+	return math.Sqrt(math.Pow(float64(t.X-other.X), 2) + math.Pow(float64(t.Y-other.Y), 2))
 }
 
 // PathNeighbors returns the direct neighboring nodes of this node which
@@ -184,22 +227,22 @@ func (t *Tile) PathNeighbors() []astar.Pather {
 // PathNeighborCost calculates the exact movement cost to neighbor nodes.
 func (t *Tile) PathNeighborCost(to astar.Pather) float64 {
 	toT := to.(*Tile)
-	return math.Sqrt(math.Pow(float64(t.X-toT.X), 2)+math.Pow(float64(t.Y-toT.Y), 2)) * (float64(toT.Type) + 1)
+	return t.DistanceTo(toT) * (float64(toT.Type) + 1)
 }
 
 // PathEstimatedCost is a heuristic method for estimating movement costs
 // between non-adjacent nodes.
 func (t *Tile) PathEstimatedCost(to astar.Pather) float64 {
 	toT := to.(*Tile)
-	return math.Sqrt(math.Pow(float64(t.X-toT.X), 2) + math.Pow(float64(t.Y-toT.Y), 2))
+	return t.DistanceTo(toT)
 }
 
-// GetdirectionFromPath returns the tile at which you can move in straight line at the desired speed
+// GetDirectionFromPath returns the tile at which you can move in straight line at the desired speed
 func GetDirectionFromPath(path []*Tile, speed float64) *Tile {
 	totalDistance := 0.0
 	previous := path[0]
 	for _, tile := range path[1:] {
-		totalDistance += tile.PathNeighborCost(previous)
+		totalDistance += tile.DistanceTo(previous)
 		if totalDistance > speed {
 			return previous
 		}

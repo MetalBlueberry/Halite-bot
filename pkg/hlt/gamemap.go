@@ -57,7 +57,7 @@ func ParseGameString(c *Connection, gameString string) Map {
 		Planets:  nil,
 		Players:  make([]Player, numPlayers),
 		Entities: make([]Entity, 0),
-		Grid: navigation.NewGrid(c.width, c.height),
+		Grid:     navigation.NewGrid(c.width, c.height),
 	}
 
 	for i := 0; i < numPlayers; i++ {
@@ -67,7 +67,11 @@ func ParseGameString(c *Connection, gameString string) Map {
 		for j := 0; j < len(player.Ships); j++ {
 			ship := player.Ships[j].Entity
 			gameMap.Entities = append(gameMap.Entities, player.Ships[j].Entity)
-			gameMap.Grid.PaintShip(ship.X, ship.Y, 5)
+			if player.ID == gameMap.MyID {
+				gameMap.Grid.PaintShip(ship.X, ship.Y, 0)
+			} else {
+				gameMap.Grid.PaintShip(ship.X, ship.Y, 5)
+			}
 		}
 	}
 

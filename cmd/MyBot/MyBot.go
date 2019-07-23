@@ -6,6 +6,7 @@ import (
 	"os"
 	"runtime/debug"
 	"strconv"
+	"time"
 
 	"github.com/metalblueberry/halite-bot/pkg/hlt"
 )
@@ -15,7 +16,7 @@ import (
 
 func main() {
 
-
+	
 	logging := true
 	botName := "GoBot"
 
@@ -38,22 +39,25 @@ func main() {
 		}
 	}()
 
-	gameMap := conn.UpdateMap()
+	gameMap,_ := conn.UpdateMap()
 	log.Println(gameMap.Grid.String())
 
 	gameturn := 1
-	for true {
-		gameMap = conn.UpdateMap()
+	for {
+		var start time.Time
+		gameMap,start = conn.UpdateMap()
 		commandQueue := []string{}
 
 		myPlayer := gameMap.Players[gameMap.MyID]
 		myShips := myPlayer.Ships
 
 		for i := 0; i < len(myShips); i++ {
+			shipStart := time.Now()
 			ship := myShips[i]
 			if ship.DockingStatus == hlt.UNDOCKED {
 				commandQueue = append(commandQueue, hlt.AstarStrategy(ship, gameMap))
 			}
+			log.Printf("Time for ship %s, total %s", time.Since(shipStart), time.Since(start))
 		}
 
 		log.Printf("Turn %v\n", gameturn)
