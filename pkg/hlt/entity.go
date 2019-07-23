@@ -79,12 +79,12 @@ func (entity Entity) CalculateRadAngleTo(target Entity) float64 {
 }
 
 // ClosestPointTo returns the closest point that is at least minDistance from the target
-func (entity Entity) ClosestPointTo(target Entity, minDistance float64) Entity {
-	dist := entity.CalculateDistanceTo(target) - target.Radius - minDistance
-	angle := target.CalculateRadAngleTo(entity)
-	x := target.X + dist*math.Cos(angle)
-	y := target.Y + dist*math.Sin(angle)
-	return Entity{
+func (entity Entity) ClosestPointTo(target Entity, minDitance float64) Entity {
+	dist := target.Radius + minDitance
+	norm := target.CalculateDistanceTo(entity)
+	x := dist * (entity.X - target.X) / norm + target.X
+	y := dist * (entity.Y - target.Y) / norm + target.Y
+	return  Entity{
 		X:      x,
 		Y:      y,
 		Radius: 0,
