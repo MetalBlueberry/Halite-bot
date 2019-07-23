@@ -60,6 +60,7 @@ var _ = Describe("Grid", func() {
 			OOOOOOOOOO
 			`)
 			result := grid.String()
+			fmt.Fprintln(GinkgoWriter, "")
 			fmt.Fprint(GinkgoWriter, result)
 			Expect(result).To(Equal(expected))
 		})
@@ -74,6 +75,7 @@ var _ = Describe("Grid", func() {
 			OOOO+OOOO
 			`)
 			result := grid.String()
+			fmt.Fprintln(GinkgoWriter, "")
 			fmt.Fprint(GinkgoWriter, result)
 			Expect(result).To(Equal(expected))
 		})
@@ -88,6 +90,7 @@ var _ = Describe("Grid", func() {
 			OOOOOOOOO
 			`)
 			result := grid.String()
+			fmt.Fprintln(GinkgoWriter, "")
 			fmt.Fprint(GinkgoWriter, result)
 			Expect(result).To(Equal(expected))
 		})
@@ -102,6 +105,7 @@ var _ = Describe("Grid", func() {
 			OOOOO+XXX
 			`)
 			result := grid.String()
+			fmt.Fprintln(GinkgoWriter, "")
 			fmt.Fprint(GinkgoWriter, result)
 			Expect(result).To(Equal(expected))
 		})
@@ -124,6 +128,7 @@ var _ = Describe("Grid", func() {
 			`)
 
 			result := grid.String()
+			fmt.Fprintln(GinkgoWriter, "")
 			fmt.Fprint(GinkgoWriter, result)
 			Expect(result).To(Equal(expected))
 
@@ -148,6 +153,7 @@ var _ = Describe("Grid", func() {
 			`)
 
 			result := grid.String()
+			fmt.Fprintln(GinkgoWriter, "")
 			fmt.Fprint(GinkgoWriter, result)
 			Expect(result).To(Equal(expected))
 
@@ -177,6 +183,7 @@ var _ = Describe("Grid", func() {
 			`)
 
 			result := grid.String()
+			fmt.Fprintln(GinkgoWriter, "")
 			fmt.Fprint(GinkgoWriter, result)
 			Expect(result).To(Equal(expected))
 
@@ -204,9 +211,9 @@ var _ = Describe("Grid", func() {
 			O#######O*O#######O
 			#########*#########
 			#########*#########
-			#########*#########
-			####V###*%####V####
-			#########*#########
+			###VVV###*###VVV###
+			###VVV##*%###VVV###
+			###VVV###*###VVV###
 			#########*#########
 			#########*#########
 			O#######O*O#######O
@@ -216,6 +223,7 @@ var _ = Describe("Grid", func() {
 			`)
 
 			result := grid.String()
+			fmt.Fprintln(GinkgoWriter, "")
 			fmt.Fprint(GinkgoWriter, result)
 			Expect(result).To(Equal(expected))
 
@@ -223,7 +231,7 @@ var _ = Describe("Grid", func() {
 			Expect(distance).To(BeNumerically(">", 0))
 
 		})
-		FIt("Should return the best posible path", func() {
+		It("Should return the best posible path", func() {
 			grid := navigation.NewGrid(19, 15)
 			grid.PaintShip(4, 7, 5)
 			grid.PaintShip(14, 7, 5)
@@ -240,15 +248,15 @@ var _ = Describe("Grid", func() {
 			}
 
 			expected := generate(`
-			OOOOOOOOO*OOOOOOOOO
-			OOOOOOOOO*OOOOOOOOO
-			OOOO#OOOO*OOOO#OOOO
-			O#######O*O#######O
-			#########*#########
-			#########*#########
-			#########*#########
-			####V###*%####V####
-			#########*#########
+			OOOOOOOOO@****OOOOO
+			OOOOOOOOO@OOOOOOOOO
+			OOOO#OOOO@OOOO#OOOO
+			O#######O@O#######O
+			#########@#########
+			#########@#########
+			###VVV###@###VVV###
+			###VVV###@###VVV###
+			###VVV###O###VVV###
 			#########O#########
 			#########O#########
 			O#######OOO#######O
@@ -262,7 +270,7 @@ var _ = Describe("Grid", func() {
 			fmt.Fprint(GinkgoWriter, result)
 			Expect(result).To(Equal(expected))
 
-			Expect(found).To(BeTrue())
+			Expect(found).To(BeFalse())
 			Expect(distance).To(BeNumerically(">", 0))
 
 		})
@@ -289,6 +297,7 @@ var _ = Describe("Grid", func() {
 			`)
 
 			result := grid.String()
+			fmt.Fprintln(GinkgoWriter, "")
 			fmt.Fprint(GinkgoWriter, result)
 			Expect(result).To(Equal(expected))
 
@@ -316,6 +325,7 @@ var _ = Describe("Grid", func() {
 			`)
 
 			result := grid.String()
+			fmt.Fprintln(GinkgoWriter, "")
 			fmt.Fprint(GinkgoWriter, result)
 			Expect(result).To(Equal(expected))
 
