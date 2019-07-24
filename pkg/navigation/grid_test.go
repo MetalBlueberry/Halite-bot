@@ -2,6 +2,7 @@ package navigation_test
 
 import (
 	"fmt"
+	"math"
 	"regexp"
 	"strings"
 
@@ -14,7 +15,7 @@ import (
 var re = regexp.MustCompile(`\s+`)
 
 func generate(data string) string {
-	return strings.ReplaceAll(strings.TrimPrefix(re.ReplaceAllString(data, "\n"), "\n"), "O", "O")
+	return strings.TrimSuffix(re.ReplaceAllString(data, "\n"), "\n")
 }
 
 var _ = Describe("Grid", func() {
@@ -23,44 +24,58 @@ var _ = Describe("Grid", func() {
 	})
 	Describe("When Initialized", func() {
 		It("Should be allocated with desired Tiles", func() {
-			grid := navigation.NewGrid(50, 50)
-			width := len(grid.Tiles)
-			Expect(width).To(BeNumerically("==", grid.Width))
-			for _, col := range grid.Tiles {
-				height := len(col)
-				Expect(height).To(BeNumerically("==", grid.Height))
-			}
+			grid := navigation.NewGrid(40, 50)
+			memory := len(grid.Tiles)
+			Expect(memory).To(BeNumerically("==", grid.Width*grid.Height))
 		})
 		Specify("Grid should be referenced by tiles", func() {
-			grid := navigation.NewGrid(5, 5)
-			for _, row := range grid.Tiles {
-				for _, tile := range row {
-					Expect(tile.Grid).To(Equal(grid))
-				}
+			grid := navigation.NewGrid(5, 10)
+			for _, tile := range grid.Tiles {
+				Expect(tile.Grid).To(Equal(grid))
 			}
 		})
 		Specify("Tiles must store their position", func() {
-			grid := navigation.NewGrid(5, 5)
-			for y, row := range grid.Tiles {
-				for x, tile := range row {
-					Expect(tile.X).To(BeNumerically("==", x))
-					Expect(tile.Y).To(BeNumerically("==", y))
+			grid := navigation.NewGrid(5, 10)
+			for index, tile := range grid.Tiles {
+				fmt.Fprintf(GinkgoWriter, "Step %d\n", index)
+				By(fmt.Sprintf("Step %d\n", index))
+				Expect(tile.X).To(BeNumerically("==", index%grid.Width))
+				Expect(tile.Y).To(BeNumerically("==", math.Floor(float64(index)/float64(grid.Width))))
+			}
+		})
+		Specify("GetTile should return values for all range", func() {
+			X := 5
+			Y := 5
+			grid := navigation.NewGrid(X, Y)
+			for x := 0; x < X; x++ {
+				for y := 0; y < Y; y++ {
+					tile := grid.GetTile(float64(x), float64(y))
+					Expect(tile).ToNot(BeNil())
+				}
+			}
+		})
+		Specify("GetTile should return the value set by SetTile", func() {
+			X := 5
+			Y := 5
+			grid := navigation.NewGrid(X, Y)
+			testTile := &navigation.Tile{}
+			for x := 0; x < X; x++ {
+				for y := 0; y < Y; y++ {
+					grid.SetTile(float64(x), float64(y), testTile)
+					tile := grid.GetTile(float64(x), float64(y))
+					Expect(tile).To(Equal(testTile))
 				}
 			}
 		})
 	})
 	Describe("When printed as string", func() {
 		It("Should return an empty ASCII map", func() {
-			grid := navigation.NewGrid(10, 5)
+			grid := navigation.NewGrid(4, 2)
 			expected := generate(`
-			OOOOOOOOOO
-			OOOOOOOOOO
-			OOOOOOOOOO
-			OOOOOOOOOO
-			OOOOOOOOOO
+			OOOO
+			OOOO
 			`)
 			result := grid.String()
-			fmt.Fprintln(GinkgoWriter, "")
 			fmt.Fprint(GinkgoWriter, result)
 			Expect(result).To(Equal(expected))
 		})

@@ -4,30 +4,28 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"math"
 
 	"github.com/metalblueberry/halite-bot/pkg/astar"
 )
 
 type Grid struct {
-	Width, Height float64
-	Tiles         [][]*Tile
+	Width, Height int
+	Tiles         []*Tile
 }
 
 func NewGrid(Width, Height int) *Grid {
 	grid := &Grid{
-		Width:  float64(Width),
-		Height: float64(Height),
-		Tiles:  make([][]*Tile, Height, Height),
+		Width:  Width,
+		Height: Height,
+		Tiles:  make([]*Tile, Height*Width, Height*Width),
 	}
-	for row := range grid.Tiles {
-		grid.Tiles[row] = make([]*Tile, Width, Width)
-		for col := range grid.Tiles[row] {
-			grid.Tiles[row][col] = &Tile{
-				Grid: grid,
-				X:    float64(col),
-				Y:    float64(row),
-			}
+	for index := range grid.Tiles {
+		grid.Tiles[index] = &Tile{
+			Grid: grid,
+			X:    float64(index % Width),
+			Y:    math.Floor(float64(index) / float64(Width)),
 		}
 	}
 	return grid
@@ -60,7 +58,7 @@ func (g *Grid) Paint(X float64, Y float64, radius float64, value TileType) {
 			x := X - i
 			y := Y - j
 			if math.Sqrt(x*x+y*y) <= radius {
-				tile := g.Tiles[int(j)][int(i)]
+				tile := g.GetTileSafe(i, j)
 				switch value {
 				case ShotRange:
 					switch tile.Type {
@@ -83,7 +81,22 @@ func (g *Grid) GetTile(x, y float64) *Tile {
 	if x < 0 || x >= float64(g.Width) || y < 0 || y >= float64(g.Height) {
 		return nil
 	}
-	return g.Tiles[int(y)][int(x)]
+	return g.Tiles[int(int(y)*g.Width+int(x))]
+}
+
+func (g *Grid) GetTileSafe(x, y float64) *Tile {
+	tile := g.GetTile(x, y)
+	if tile == nil {
+		log.Panicf("Index out of range \nx:%f y:%f\nw:%d h:%d\n", x, y, g.Width, g.Height)
+	}
+	return tile
+}
+
+func (g *Grid) SetTile(x, y float64, tile *Tile) {
+	if x < 0 || x >= float64(g.Width) || y < 0 || y >= float64(g.Height) {
+		log.Panicf("Index out of range \nx:%f y:%f\nw:%d h:%d\n", x, y, g.Width, g.Height)
+	}
+	g.Tiles[int(int(y)*g.Width+int(x))] = tile
 }
 
 func (g *Grid) Path(from, to *Tile, iterations int) (path []*Tile, distance float64, found bool, bestPath []*Tile) {
@@ -103,11 +116,11 @@ func (g *Grid) String() string {
 	mem := make([]byte, 0, int(g.Width*g.Height+g.Height+g.Width))
 	buf := bytes.NewBuffer(mem)
 
-	for _, row := range g.Tiles {
-		for _, col := range row {
-			buf.WriteString(col.Type.String())
+	for index, tile := range g.Tiles {
+		if index%g.Width == 0 {
+			buf.WriteRune('\n')
 		}
-		buf.WriteRune('\n')
+		buf.WriteString(tile.Type.String())
 	}
 
 	data, _ := ioutil.ReadAll(buf)
@@ -118,28 +131,28 @@ func (g *Grid) PrintDebugPath(path []*Tile, from *Tile, to *Tile) string {
 	mem := make([]byte, 0, int(g.Width*g.Height+g.Height+g.Width))
 	buf := bytes.NewBuffer(mem)
 
-	for _, row := range g.Tiles {
-		for _, col := range row {
-			if from == col {
-				buf.WriteString("V")
-				continue
-			}
-			if to == col {
-				buf.WriteString("8")
-				continue
-			}
-			isPath := false
-			for _, inPath := range path {
-				if inPath == col {
-					isPath = true
-					buf.WriteString("*")
-				}
-			}
-			if !isPath {
-				buf.WriteString(col.Type.String())
+	for index, tile := range g.Tiles {
+		if from == tile {
+			buf.WriteString("V")
+			continue
+		}
+		if to == tile {
+			buf.WriteString("8")
+			continue
+		}
+		isPath := false
+		for _, inPath := range path {
+			if inPath == tile {
+				isPath = true
+				buf.WriteString("*")
 			}
 		}
-		buf.WriteRune('\n')
+		if !isPath {
+			buf.WriteString(tile.Type.String())
+		}
+		if index%g.Width == 0 {
+			buf.WriteRune('\n')
+		}
 	}
 
 	data, _ := ioutil.ReadAll(buf)
