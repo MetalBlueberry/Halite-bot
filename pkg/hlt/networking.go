@@ -1,11 +1,7 @@
 package hlt
 
 import (
-	"bufio"
-	"fmt"
-	"io"
 	"log"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -16,18 +12,21 @@ import (
 type Connection struct {
 	width, height int
 	PlayerTag     int
-	reader        *bufio.Reader
-	writer        io.Writer
+	reader        <-chan string
+	writer        chan<- string
 }
 
 func (c *Connection) sendString(input string) {
-	fmt.Println(input)
+	c.writer <- input
+	log.Println(input)
 }
 
 func (c *Connection) getString() string {
-	retstr, _ := c.reader.ReadString('\n')
-	retstr = strings.TrimSpace(retstr)
-	return retstr
+	data, ok := <-c.reader
+	if !ok {
+		panic("game finished")
+	}
+	return strings.TrimSpace(data)
 }
 
 func (c *Connection) getInt() int {
@@ -40,10 +39,10 @@ func (c *Connection) getInt() int {
 
 // NewConnection initializes a new connection for one of the bots
 // participating in a match
-func NewConnection(botName string) Connection {
+func NewConnection(botName string, source <-chan string, response chan<- string) Connection {
 	conn := Connection{
-		reader: bufio.NewReader(os.Stdin),
-		writer: os.Stdout,
+		reader: source,
+		writer: response,
 	}
 	conn.PlayerTag = conn.getInt()
 	sizeInfo := strings.Split(conn.getString(), " ")
