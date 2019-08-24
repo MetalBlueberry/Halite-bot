@@ -1,8 +1,12 @@
 package main
 
 import (
+	"bufio"
+	"fmt"
 	"log"
+	"os"
 	"runtime/debug"
+	"strconv"
 	"time"
 
 	"flag"
@@ -26,9 +30,14 @@ func (ws *WebSocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer c.Close()
+
 	source := make(chan string)
-	response := make(chan string)
 	defer close(source)
+
+	response := make(chan string)
+
+	go NewGame("WSBot", false, source, response)
+
 	go func() {
 		for {
 			data, ok := <-response
@@ -37,13 +46,13 @@ func (ws *WebSocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				c.Close()
 				return
 			}
-			log.Println("ok")
 			log.Printf("send: %s\n", data)
-			c.WriteMessage(websocket.TextMessage, []byte(data))
+			err := c.WriteMessage(websocket.TextMessage, []byte(data))
+			if err != nil {
+				log.Panicf("message could not be sent over websocket %s", err)
+			}
 		}
 	}()
-
-	go NewGame(source, response)
 
 	for {
 		_, message, err := c.ReadMessage()
@@ -53,11 +62,6 @@ func (ws *WebSocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Printf("recv: %s", message)
 		source <- string(message)
-		// err = c.WriteMessage(mt, message)
-		// if err != nil {
-		// 	log.Println("write:", err)
-		// 	break
-		// }
 	}
 }
 
@@ -67,41 +71,87 @@ func (ws *WebSocketHandler) CreateServer() {
 	log.Fatal(http.ListenAndServe(*addr, nil))
 }
 
-// golang starter kit with logging and basic pathfinding
-// Arjun Viswanathan 2017 / github arjunvis
-
 func main() {
-	ws := WebSocketHandler{
-		Upgrader: websocket.Upgrader{}, // use default options
+	var server = flag.Bool("server", false, "if passed, the bot runs a websocket server, compatible with stdinToWebsocket")
+	var botName = flag.String("name", "MyBot", "The name for the bot in local games")
+	flag.Parse()
+
+	if *server {
+		log.Print("Running in server mode")
+		ws := WebSocketHandler{
+			Upgrader: websocket.Upgrader{}, // use default options
+		}
+		ws.CreateServer()
+	} else {
+		NewLocalGame(*botName)
 	}
-	ws.CreateServer()
 }
 
-func NewGame(source <-chan string, response chan<- string) {
+// NewLocalGame wraps stdin and stdout to be compatible with NewGame function.
+func NewLocalGame(botName string) {
+	done := make(chan struct{})
+
+	stdin := make(chan string)
+	stdout := make(chan string)
+
+	go func() {
+		defer close(done)
+		for {
+			message, ok := <-stdout
+			if !ok {
+				log.Println("stdout closed")
+				return
+			}
+			_, err := fmt.Fprintf(os.Stdout, "%s\n", message)
+			if err != nil {
+				log.Panic(err)
+			}
+		}
+	}()
+
+	scanner := bufio.NewScanner(os.Stdin)
+	go func(scanner *bufio.Scanner) {
+		defer close(done)
+
+		for scanner.Scan() {
+			stdin <- scanner.Text()
+		}
+
+		if scanner.Err() != nil {
+			panic(scanner.Err())
+		}
+
+	}(scanner)
+
+	NewGame(botName, true, stdin, stdout)
+
+}
+
+// NewGame creates a new game with a name and communication channels.
+func NewGame(botName string, logToFile bool, source <-chan string, response chan<- string) {
 	defer func() {
 		if r := recover(); r != nil {
-			log.Println("Recovered in f", r)
+			log.Println("Game finished due to: ", r)
 		}
 	}()
 
 	defer close(response)
-	log.Print("Game Starts")
 
 	// logging := true
-	botName := "GoBot"
 
 	conn := hlt.NewConnection(botName, source, response)
 
-	// set up logging
-	// if logging {
-	// 	fname := "logs_" + strconv.Itoa(conn.PlayerTag) + "_gamelog.log"
-	// 	f, err := os.OpenFile(fname, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	// 	if err != nil {
-	// 		fmt.Printf("error opening file: %v\n", err)
-	// 	}
-	// 	defer f.Close()
-	// 	log.SetOutput(f)
-	// }
+	if logToFile {
+		fname := "logs_" + strconv.Itoa(conn.PlayerTag) + "_gamelog.log"
+		f, err := os.OpenFile(fname, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			fmt.Printf("error opening file: %v\n", err)
+		}
+		defer f.Close()
+		log.SetOutput(f)
+	}
+
+	log.Print("Game Starts")
 
 	defer func() {
 		if r := recover(); r != nil {
