@@ -1,0 +1,6 @@
+*.log
+replay-*
+main
+cmd/canvas/canvas
+cmd/stdinToWebsocket/stdinToWebsocket
+cmd/MyBot/MyBot
