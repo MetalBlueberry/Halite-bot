@@ -43,7 +43,7 @@ func (nm nodeMap) get(p Pather) *node {
 	return n
 }
 
-func reverse(p []Pather){
+func reverse(p []Pather) {
 	for left, right := 0, len(p)-1; left < right; left, right = left+1, right-1 {
 		p[left], p[right] = p[right], p[left]
 	}
@@ -69,8 +69,7 @@ func Path(from, to Pather, iterations int) (path []Pather, distance float64, fou
 	fromNode.rank = from.PathEstimatedCost(to)
 	fromNode.open = true
 	heap.Push(nq, fromNode)
-	bestPath = make([]Pather, 1)
-	bestPath[0] = from
+	bestNode := fromNode
 
 	for {
 		if nq.Len() == 0 {
@@ -83,8 +82,9 @@ func Path(from, to Pather, iterations int) (path []Pather, distance float64, fou
 		current.closed = true
 
 		if current == nm.get(to) || iterations == 0 {
-			// Found a path to the goal.
+			// Found a path to the goal or run out of iterations
 			p := unwindPath(current)
+			bestPath := unwindPath(bestNode)
 			reverse(p)
 			reverse(bestPath)
 			return p, current.cost, iterations != 0, bestPath
@@ -106,9 +106,8 @@ func Path(from, to Pather, iterations int) (path []Pather, distance float64, fou
 				neighborNode.open = true
 				neighborNode.rank = cost + neighbor.PathEstimatedCost(to)
 				neighborNode.parent = current
-				bestNode := nm.get(bestPath[0])
-				if bestNode.rank - bestNode.cost >= neighborNode.rank - neighborNode.cost {
-					bestPath = unwindPath(neighborNode)
+				if bestNode.rank-bestNode.cost >= neighborNode.rank-neighborNode.cost {
+					bestNode = neighborNode
 				}
 				heap.Push(nq, neighborNode)
 			}
