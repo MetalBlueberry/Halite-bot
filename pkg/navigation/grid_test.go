@@ -290,62 +290,62 @@ var _ = Describe("Grid", func() {
 
 		})
 	})
-	Describe("When finding the dirction", func() {
-		It("Should return a point at desired distance in horizontal", func() {
-			grid := navigation.NewGrid(10, 5)
-			start := grid.GetTile(1, 2)
-			end := grid.GetTile(8, 2)
-			path, distance, found, _ := grid.Path(start, end, 200)
-			destiny := navigation.GetDirectionFromPath(path, 5)
+	// Describe("When finding the dirction", func() {
+	// 	It("Should return a point at desired distance in horizontal", func() {
+	// 		grid := navigation.NewGrid(10, 5)
+	// 		start := grid.GetTile(1, 2)
+	// 		end := grid.GetTile(8, 2)
+	// 		path, distance, found, _ := grid.Path(start, end, 200)
+	// 		destiny := navigation.GetDirectionFromPath(path, 5)
 
-			for _, step := range path {
-				step.Type = navigation.Walked
-			}
-			destiny.Type = navigation.Ship
+	// 		for _, step := range path {
+	// 			step.Type = navigation.Walked
+	// 		}
+	// 		destiny.Type = navigation.Ship
 
-			expected := generate(`
-			OOOOOOOOOO
-			OOOOOOOOOO
-			O*****V**O
-			OOOOOOOOOO
-			OOOOOOOOOO
-			`)
+	// 		expected := generate(`
+	// 		OOOOOOOOOO
+	// 		OOOOOOOOOO
+	// 		O*****V**O
+	// 		OOOOOOOOOO
+	// 		OOOOOOOOOO
+	// 		`)
 
-			result := grid.String()
-			fmt.Fprintln(GinkgoWriter, "")
-			fmt.Fprint(GinkgoWriter, result)
-			Expect(result).To(Equal(expected))
+	// 		result := grid.String()
+	// 		fmt.Fprintln(GinkgoWriter, "")
+	// 		fmt.Fprint(GinkgoWriter, result)
+	// 		Expect(result).To(Equal(expected))
 
-			Expect(found).To(BeTrue())
-			Expect(distance).To(BeNumerically(">", 0))
-		})
-		It("Should return a point at desired distance in diagonal", func() {
-			grid := navigation.NewGrid(10, 5)
-			start := grid.GetTile(9, 4)
-			end := grid.GetTile(0, 0)
-			path, distance, found, _ := grid.Path(start, end, 200)
-			destiny := navigation.GetDirectionFromPath(path, 5)
+	// 		Expect(found).To(BeTrue())
+	// 		Expect(distance).To(BeNumerically(">", 0))
+	// 	})
+	// 	It("Should return a point at desired distance in diagonal", func() {
+	// 		grid := navigation.NewGrid(10, 5)
+	// 		start := grid.GetTile(9, 4)
+	// 		end := grid.GetTile(0, 0)
+	// 		path, distance, found, _ := grid.Path(start, end, 200)
+	// 		destiny := navigation.GetDirectionFromPath(path, 5)
 
-			for _, step := range path {
-				step.Type = navigation.Walked
-			}
-			destiny.Type = navigation.Ship
+	// 		for _, step := range path {
+	// 			step.Type = navigation.Walked
+	// 		}
+	// 		destiny.Type = navigation.Ship
 
-			expected := generate(`
-			*OOOOOOOOO
-			O***OOOOOO
-			OOOO*VOOOO
-			OOOOOO**OO
-			OOOOOOOO**
-			`)
+	// 		expected := generate(`
+	// 		*OOOOOOOOO
+	// 		O***OOOOOO
+	// 		OOOO*VOOOO
+	// 		OOOOOO**OO
+	// 		OOOOOOOO**
+	// 		`)
 
-			result := grid.String()
-			fmt.Fprintln(GinkgoWriter, "")
-			fmt.Fprint(GinkgoWriter, result)
-			Expect(result).To(Equal(expected))
+	// 		result := grid.String()
+	// 		fmt.Fprintln(GinkgoWriter, "")
+	// 		fmt.Fprint(GinkgoWriter, result)
+	// 		Expect(result).To(Equal(expected))
 
-			Expect(found).To(BeTrue())
-			Expect(distance).To(BeNumerically(">", 0))
-		})
-	})
+	// 		Expect(found).To(BeTrue())
+	// 		Expect(distance).To(BeNumerically(">", 0))
+	// 	})
+	// })
 })
