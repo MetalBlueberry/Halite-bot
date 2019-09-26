@@ -1,10 +1,11 @@
 package hlt
 
 import (
-	"log"
 	"strconv"
 	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // Connection performs all of the IO operations required to communicate
@@ -18,7 +19,6 @@ type Connection struct {
 
 func (c *Connection) sendString(input string) {
 	c.writer <- input
-	log.Println(input)
 }
 
 func (c *Connection) getString() string {

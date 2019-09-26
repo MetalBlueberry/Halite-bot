@@ -2,8 +2,8 @@ package navigation
 
 import (
 	"bytes"
+	log "github.com/sirupsen/logrus"
 	"io/ioutil"
-	"log"
 	"math"
 
 	"github.com/metalblueberry/halite-bot/pkg/astar"
@@ -39,7 +39,6 @@ func (g *Grid) PaintPlanet(X float64, Y float64, radius float64) {
 	g.Paint(X, Y, radius+1, SafeMargin)
 	g.Paint(X, Y, radius, Blocked)
 }
-
 
 func (g *Grid) Paint(X float64, Y float64, radius float64, value TileType) {
 	i := X - math.Ceil(radius)

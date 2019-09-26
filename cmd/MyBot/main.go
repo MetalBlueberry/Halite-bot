@@ -1,28 +1,27 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"time"
 
-	"flag"
-
-	"github.com/metalblueberry/halite-bot/pkg/hlt"
-
 	"github.com/gorilla/websocket"
+	"github.com/metalblueberry/halite-bot/pkg/hlt"
 	log "github.com/sirupsen/logrus"
 )
 
 var addr = flag.String("addr", "localhost:8080", "http service address")
 
 func main() {
-	var server = flag.Bool("server", false, "if passed, the bot runs a websocket server, compatible with stdinToWebsocket")
+	var server = flag.Bool("server", true, "if passed, the bot runs a websocket server, compatible with stdinToWebsocket")
 	var botName = flag.String("name", "MyBot", "The name for the bot in local games")
 	var logToFile = flag.Bool("logToFile", false, "log to file, true if server is false")
 	var debug = flag.Bool("debug", false, "prints to stdout debug information to be used with halite-debug project")
 	flag.Parse()
 
 	// TODO: Configure logrus
+	log.SetLevel(log.DebugLevel)
 	if *logToFile {
 		fname := fmt.Sprintf("logs_%s_gamelog.log", *botName)
 		f, err := os.OpenFile(fname, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
@@ -92,7 +91,7 @@ func (g Game) Loop() {
 	log.Print("Game Starts")
 
 	gameMap, _ := conn.UpdateMap()
-	log.Println(gameMap.Grid.String())
+	//log.Println(gameMap.Grid.String())
 
 	gameturn := 1
 	for {
@@ -102,6 +101,15 @@ func (g Game) Loop() {
 
 		myPlayer := gameMap.Players[gameMap.MyID]
 		myShips := myPlayer.Ships
+
+		for _, p := range gameMap.Planets {
+			debug.Entity(gameturn, p.Entity, []string{"planet", fmt.Sprintf("player%d", int(p.Owned)*(1+p.Owner))})
+		}
+		for _, player := range gameMap.Players {
+			for _, ship := range player.Ships {
+				debug.Entity(gameturn, ship.Entity, []string{"ship", fmt.Sprintf("player%d", 1+ship.Owner)})
+			}
+		}
 
 		for i := 0; i < len(myShips); i++ {
 			shipStart := time.Now()
@@ -116,5 +124,6 @@ func (g Game) Loop() {
 		conn.SubmitCommands(commandQueue)
 		gameturn++
 	}
-
 }
+
+var debug = NewCanvasServer()

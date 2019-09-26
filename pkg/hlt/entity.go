@@ -57,6 +57,10 @@ type Ship struct {
 	WeaponCooldown  float64
 }
 
+func (entity Entity) UniqueID() string {
+	return fmt.Sprintf("%f%f", entity.X, entity.Y)
+}
+
 // CalculateDistanceTo returns a euclidean distance to the target
 func (entity Entity) CalculateDistanceTo(target Entity) float64 {
 	dx := target.X - entity.X
@@ -82,9 +86,9 @@ func (entity Entity) CalculateRadAngleTo(target Entity) float64 {
 func (entity Entity) ClosestPointTo(target Entity, minDitance float64) Entity {
 	dist := target.Radius + minDitance
 	norm := target.CalculateDistanceTo(entity)
-	x := dist * (entity.X - target.X) / norm + target.X
-	y := dist * (entity.Y - target.Y) / norm + target.Y
-	return  Entity{
+	x := dist*(entity.X-target.X)/norm + target.X
+	y := dist*(entity.Y-target.Y)/norm + target.Y
+	return Entity{
 		X:      x,
 		Y:      y,
 		Radius: 0,
@@ -235,7 +239,7 @@ func (ship Ship) NavigateBasic(target Entity, gameMap Map) string {
 // NavigateBasic demonstrates how the player might move ships through space
 func (ship Ship) NavigateBasic2(target Entity, gameMap Map) string {
 	distance := ship.CalculateDistanceTo(target)
-	safeDistance := distance - ship.Entity.Radius - target.Radius - .1
+	safeDistance := distance // - ship.Entity.Radius - target.Radius - .1 //disbled  as pathfinding is handling this
 
 	angle := ship.CalculateAngleTo(target)
 	speed := 7.0
