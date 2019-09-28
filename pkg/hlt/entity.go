@@ -30,6 +30,10 @@ type Entity struct {
 	ID     int
 }
 
+func (e *Entity) Circle() (x, y, radius float64) {
+	return e.X, e.Y, e.Radius
+}
+
 // Planet object from which Halite is mined
 type Planet struct {
 	Entity
