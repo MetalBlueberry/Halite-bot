@@ -34,7 +34,7 @@ func (t TileType) String() string {
 	return repr[t]
 }
 
-type Weighter interface{
+type Weighter interface {
 	GetWeight(float64, float64) float64
 }
 
@@ -45,12 +45,21 @@ type Tile struct {
 	Grid *Grid
 }
 
+func (t *Tile) Position() (x, y float64) {
+	return t.X, t.Y
+}
+
 func (t *Tile) String() string {
 	return fmt.Sprintf("x:%f y:%f", t.X, t.Y)
 }
 
-func (t *Tile) DistanceTo(other *Tile) float64 {
-	return math.Sqrt(math.Pow(float64(t.X-other.X), 2) + math.Pow(float64(t.Y-other.Y), 2))
+type Positioner interface {
+	Position() (x, y float64)
+}
+
+func (t *Tile) DistanceTo(other Positioner) float64 {
+	x2, y2 := other.Position()
+	return math.Sqrt(math.Pow(float64(t.X-x2), 2) + math.Pow(float64(t.Y-y2), 2))
 }
 
 // PathNeighbors returns the direct neighboring nodes of this node which

@@ -30,6 +30,10 @@ type Entity struct {
 	ID     int
 }
 
+func (e *Entity) Position() (x, y float64) {
+	return e.X, e.Y
+}
+
 func (e *Entity) Circle() (x, y, radius float64) {
 	return e.X, e.Y, e.Radius
 }

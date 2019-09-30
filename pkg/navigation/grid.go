@@ -72,7 +72,7 @@ func (g *Grid) GetTile(x, y float64) *Tile {
 	if x < 0 || x >= float64(g.Width) || y < 0 || y >= float64(g.Height) {
 		return nil
 	}
-	return g.Tiles[int(int(y)*g.Width+int(x))]
+	return g.Tiles[int(int(math.Round(y))*g.Width+int(math.Round(x)))]
 }
 
 func (g *Grid) GetTileSafe(x, y float64) *Tile {
