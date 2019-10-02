@@ -15,8 +15,6 @@ type Map struct {
 	Planets             []Planet
 	Players             []Player
 	Entities            []Entity
-	EntitiesByX         []Entity
-	EntitiesByY         []Entity
 	Grid                *navigation.Grid
 }
 
@@ -103,42 +101,6 @@ type byY []Entity
 func (a byY) Len() int           { return len(a) }
 func (a byY) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a byY) Less(i, j int) bool { return a[i].Y < a[j].Y }
-
-func (gameMap Map) GenerateIndex() {
-	copy(gameMap.Entities, gameMap.EntitiesByX)
-	copy(gameMap.Entities, gameMap.EntitiesByY)
-	sort.Sort(byX(gameMap.EntitiesByX))
-	sort.Sort(byX(gameMap.EntitiesByY))
-}
-
-func (gameMap Map) GetEntitiesInsideRect(x1, y1, x2, y2 float64) []Entity {
-	sliceX1 := sort.Search(len(gameMap.EntitiesByX), func(i int) bool {
-		return gameMap.EntitiesByX[i].X > x1
-	})
-	sliceX2 := sort.Search(len(gameMap.EntitiesByX), func(i int) bool {
-		return gameMap.EntitiesByX[i].X > x2
-	})
-	sliceY1 := sort.Search(len(gameMap.EntitiesByY), func(i int) bool {
-		return gameMap.EntitiesByY[i].Y > y1
-	})
-	sliceY2 := sort.Search(len(gameMap.EntitiesByY), func(i int) bool {
-		return gameMap.EntitiesByY[i].Y > y2
-	})
-	set := make(map[string]Entity)
-	for x := sliceX1; x < sliceX2; x++ {
-		e := gameMap.EntitiesByX[x]
-		set[e.UniqueID()] = e
-	}
-	for y := sliceY1; y < sliceY2; y++ {
-		e := gameMap.EntitiesByX[y]
-		set[e.UniqueID()] = e
-	}
-	result := make([]Entity, len(set))
-	for _, v := range set {
-		result = append(result, v)
-	}
-	return result
-}
 
 // ObstaclesBetween demonstrates how the player might determine if the path
 // between two enitities is clear
