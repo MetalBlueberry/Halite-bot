@@ -12,26 +12,26 @@ import (
 // Map describes the current state of the game
 type Map struct {
 	MyID, Width, Height int
-	Planets             []Planet
-	Players             []Player
-	Entities            []Entity
+	Planets             []*Planet
+	Players             []*Player
+	Entities            []Entitier
 	Grid                *navigation.Grid
 }
 
 // Player has an ID for establishing ownership, and a number of ships
 type Player struct {
 	ID    int
-	Ships []Ship
+	Ships []*Ship
 }
 
 // ParsePlayer from a slice of game state tokens
-func ParsePlayer(tokens []string) (Player, []string) {
+func ParsePlayer(tokens []string) (*Player, []string) {
 	playerID, _ := strconv.Atoi(tokens[0])
 	playerNumShips, _ := strconv.ParseFloat(tokens[1], 64)
 
-	player := Player{
+	player := &Player{
 		ID:    playerID,
-		Ships: []Ship{},
+		Ships: []*Ship{},
 	}
 
 	tokens = tokens[2:]
@@ -55,8 +55,8 @@ func ParseGameString(c *Connection, gameString string) Map {
 		Width:    c.width,
 		Height:   c.height,
 		Planets:  nil,
-		Players:  make([]Player, numPlayers),
-		Entities: make([]Entity, 0),
+		Players:  make([]*Player, numPlayers),
+		Entities: make([]Entitier, 0),
 		Grid:     navigation.NewGrid(c.width, c.height),
 	}
 
@@ -68,15 +68,15 @@ func ParseGameString(c *Connection, gameString string) Map {
 			ship := player.Ships[j].Entity
 			gameMap.Entities = append(gameMap.Entities, player.Ships[j].Entity)
 			if player.ID == gameMap.MyID {
-				gameMap.Grid.PaintShip(ship.X, ship.Y, 0)
+				gameMap.Grid.PaintShip(ship.x, ship.y, 0)
 			} else {
-				gameMap.Grid.PaintShip(ship.X, ship.Y, 5)
+				gameMap.Grid.PaintShip(ship.x, ship.y, 5)
 			}
 		}
 	}
 
 	numPlanets, _ := strconv.Atoi(tokens[0])
-	gameMap.Planets = make([]Planet, 0, numPlanets)
+	gameMap.Planets = make([]*Planet, 0, numPlanets)
 	tokens = tokens[1:]
 
 	for i := 0; i < numPlanets; i++ {
@@ -84,7 +84,7 @@ func ParseGameString(c *Connection, gameString string) Map {
 		tokens = tokensnew
 		gameMap.Planets = append(gameMap.Planets, planet)
 		gameMap.Entities = append(gameMap.Entities, planet.Entity)
-		gameMap.Grid.PaintPlanet(planet.Entity.X, planet.Entity.Y, planet.Entity.Radius)
+		gameMap.Grid.PaintPlanet(planet.Entity.x, planet.Entity.y, planet.Entity.radius)
 	}
 
 	return gameMap
@@ -94,21 +94,19 @@ type byX []Entity
 
 func (a byX) Len() int           { return len(a) }
 func (a byX) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a byX) Less(i, j int) bool { return a[i].X < a[j].X }
+func (a byX) Less(i, j int) bool { return a[i].x < a[j].x }
 
 type byY []Entity
 
 func (a byY) Len() int           { return len(a) }
 func (a byY) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a byY) Less(i, j int) bool { return a[i].Y < a[j].Y }
+func (a byY) Less(i, j int) bool { return a[i].y < a[j].y }
 
 // ObstaclesBetween demonstrates how the player might determine if the path
 // between two enitities is clear
-func (gameMap Map) ObstaclesBetween(start Entity, end Entity) (bool, Entity) {
-	x1 := start.X
-	y1 := start.Y
-	x2 := end.X
-	y2 := end.Y
+func (gameMap Map) ObstaclesBetween(start Entitier, end Entitier) (bool, Entitier) {
+	x1, y1 := start.Position()
+	x2, y2 := end.Position()
 	dx := x2 - x1
 	dy := y2 - y1
 	a := dx*dx + dy*dy + 1e-8
@@ -116,15 +114,14 @@ func (gameMap Map) ObstaclesBetween(start Entity, end Entity) (bool, Entity) {
 
 	for i := 0; i < len(gameMap.Entities); i++ {
 		entity := gameMap.Entities[i]
-		if entity.ID == start.ID || entity.ID == end.ID {
+		if entity.ID() == start.ID() || entity.ID() == end.ID() {
 			continue
 		}
 
-		x0 := entity.X
-		y0 := entity.Y
+		x0, y0, radius := entity.Circle()
 
 		closestDistance := end.CalculateDistanceTo(entity)
-		if closestDistance < entity.Radius+1 {
+		if closestDistance < radius+1 {
 			return true, entity
 		}
 
@@ -135,20 +132,21 @@ func (gameMap Map) ObstaclesBetween(start Entity, end Entity) (bool, Entity) {
 			continue
 		}
 
-		closestX := start.X + dx*t
-		closestY := start.Y + dy*t
+		sx, sy, sradius := start.Circle()
+		closestX := sx + dx*t
+		closestY := sy + dy*t
 		closestDistance = math.Sqrt(math.Pow(closestX-x0, 2) * +math.Pow(closestY-y0, 2))
 
-		if closestDistance <= entity.Radius+start.Radius+1 {
+		if closestDistance <= radius+sradius+1 {
 			return true, entity
 		}
 	}
-	return false, Entity{}
+	return false, nil
 }
 
 // NearestPlanetsByDistance orders all planets based on their proximity
 // to a given ship from nearest for farthest
-func (gameMap Map) NearestPlanetsByDistance(ship Ship) []Planet {
+func (gameMap Map) NearestPlanetsByDistance(ship *Ship) []*Planet {
 	planets := gameMap.Planets
 
 	for i := 0; i < len(planets); i++ {
@@ -161,7 +159,7 @@ func (gameMap Map) NearestPlanetsByDistance(ship Ship) []Planet {
 	return planets
 }
 
-type byDist []Planet
+type byDist []*Planet
 
 func (a byDist) Len() int           { return len(a) }
 func (a byDist) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }

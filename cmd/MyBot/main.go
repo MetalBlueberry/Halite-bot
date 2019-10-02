@@ -105,11 +105,11 @@ func (g Game) Loop() {
 		myShips := myPlayer.Ships
 
 		for _, p := range gameMap.Planets {
-			debug.Circle(&p.Entity, []string{"planet", fmt.Sprintf("player%d", int(p.Owned)*(1+p.Owner))}...)
+			debug.Circle(p.Entity, []string{"planet", fmt.Sprintf("player%d", int(p.Owned)*(1+p.Owner()))}...)
 		}
 		for _, player := range gameMap.Players {
 			for _, ship := range player.Ships {
-				debug.Circle(&ship.Entity, []string{"ship", fmt.Sprintf("player%d", 1+ship.Owner)}...)
+				debug.Circle(ship.Entity, []string{"ship", fmt.Sprintf("player%d", 1+ship.Owner())}...)
 			}
 		}
 
