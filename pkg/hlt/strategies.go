@@ -2,7 +2,7 @@ package hlt
 
 import (
 	//log "github.com/sirupsen/logrus"
-	debug "github.com/metalblueberry/sicase/pkg/client"
+	debug "github.com/metalblueberry/Halite-debug/pkg/client"
 	"strconv"
 
 	"github.com/metalblueberry/halite-bot/pkg/navigation"

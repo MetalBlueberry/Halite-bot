@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	debug "github.com/metalblueberry/Halite-debug/pkg/client"
 	"github.com/metalblueberry/halite-bot/pkg/hlt"
-	debug "github.com/metalblueberry/sicase/pkg/client"
 	log "github.com/sirupsen/logrus"
 )
 
