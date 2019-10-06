@@ -27,6 +27,7 @@ func (ws *WebSocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer close(source)
 
 	conf := NewConf(source, response)
+	conf.Debug = ws.Debug
 	game := NewGame("WSBot", conf)
 
 	go ws.ListenForGameUpdates(response, socket)
@@ -52,7 +53,7 @@ func (ws *WebSocketHandler) ListenForGameUpdates(response <-chan string, socket 
 			socket.Close()
 			return
 		}
-		log.Printf("send: %s\n", data)
+		//log.Printf("send: %s\n", data)
 		err := socket.WriteMessage(websocket.TextMessage, []byte(data))
 		if err != nil {
 			log.Panicf("message could not be sent over websocket %s", err)
@@ -67,7 +68,7 @@ func (ws *WebSocketHandler) ForwardMessages(source chan<- string, socket *websoc
 			log.Println("read:", err)
 			break
 		}
-		log.Printf("recv: %s", message)
+		//log.Printf("recv: %s", message)
 		source <- string(message)
 	}
 }

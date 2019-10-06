@@ -7,7 +7,10 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	debug "github.com/metalblueberry/Halite-debug/pkg/client"
+	halitedebug "github.com/metalblueberry/Halite-debug/pkg/client"
+
+	"runtime/debug"
+
 	"github.com/metalblueberry/halite-bot/pkg/hlt"
 	log "github.com/sirupsen/logrus"
 )
@@ -18,7 +21,7 @@ func main() {
 	var server = flag.Bool("server", true, "if passed, the bot runs a websocket server, compatible with stdinToWebsocket")
 	var botName = flag.String("name", "MyBot", "The name for the bot in local games")
 	var logToFile = flag.Bool("logToFile", false, "log to file, true if server is false")
-	var debug = flag.Bool("debug", false, "prints to stdout debug information to be used with halite-debug project")
+	var debugf = flag.Bool("debug", true, "prints to stdout debug information to be used with halite-debug project")
 	flag.Parse()
 
 	// TODO: Configure logrus
@@ -38,7 +41,7 @@ func main() {
 		ws := WebSocketHandler{
 			Upgrader:  websocket.Upgrader{}, // use default options
 			LogToFile: *logToFile,
-			Debug:     *debug,
+			Debug:     *debugf,
 		}
 		ws.CreateServer()
 	} else {
@@ -52,6 +55,7 @@ func main() {
 type GameConfig struct {
 	Source   <-chan string
 	Response chan<- string
+	Debug    bool
 }
 
 type Game struct {
@@ -82,18 +86,19 @@ func (g Game) Loop() {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Println("Game finished due to: ", r)
+			log.Println("stacktrace from panic: \n" + string(debug.Stack()))
+
 		}
 	}()
 
 	defer g.End()
 
 	conn := hlt.NewConnection(g.BotName, g.Conf.Source, g.Conf.Response)
-	debug.InitializeDefaultCanvas("http://localhost:8888", time.Now().Format("2006-01-02+15:04:05"))
+	halitedebug.InitializeDefaultCanvas("http://localhost:8888", time.Now().Format("2006-01-02+15:04:05"), g.Conf.Debug)
 
 	log.Print("Game Starts")
 
 	gameMap, _ := conn.UpdateMap()
-	//log.Println(gameMap.Grid.String())
 
 	gameturn := 1
 	for {
@@ -105,11 +110,11 @@ func (g Game) Loop() {
 		myShips := myPlayer.Ships
 
 		for _, p := range gameMap.Planets {
-			debug.Circle(p.Entity, []string{"planet", fmt.Sprintf("player%d", int(p.Owned)*(1+p.Owner()))}...)
+			halitedebug.Circle(p.Entity, []string{"planet", fmt.Sprintf("player%d", int(p.Owned)*(1+p.Owner()))}...)
 		}
 		for _, player := range gameMap.Players {
 			for _, ship := range player.Ships {
-				debug.Circle(ship.Entity, []string{"ship", fmt.Sprintf("player%d", 1+ship.Owner())}...)
+				halitedebug.Circle(ship.Entity, []string{"ship", fmt.Sprintf("player%d", 1+ship.Owner())}...)
 			}
 		}
 
@@ -124,7 +129,7 @@ func (g Game) Loop() {
 
 		log.Printf("Turn %v\n", gameturn)
 		conn.SubmitCommands(commandQueue)
-		debug.Send(gameturn)
+		halitedebug.Send(gameturn)
 		gameturn++
 	}
 }

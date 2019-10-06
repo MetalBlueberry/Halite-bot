@@ -67,6 +67,6 @@ func (c *Connection) UpdateMap() (Map, time.Time) {
 // SubmitCommands encodes the player's commands into a string
 func (c *Connection) SubmitCommands(commandQueue []string) {
 	commandString := strings.Join(commandQueue, " ")
-	log.Printf("Final string : %+v\n", commandString)
+	//log.Printf("Final string : %+v\n", commandString)
 	c.sendString(commandString)
 }

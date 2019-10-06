@@ -2,7 +2,7 @@ package hlt
 
 import (
 	//log "github.com/sirupsen/logrus"
-	debug "github.com/metalblueberry/Halite-debug/pkg/client"
+	halitedebug "github.com/metalblueberry/Halite-debug/pkg/client"
 	"strconv"
 
 	"github.com/metalblueberry/halite-bot/pkg/navigation"
@@ -62,18 +62,14 @@ func AstarStrategy(ship *Ship, gameMap Map) string {
 
 			previous := from
 			for _, t := range path {
-				debug.Line(NewLine(previous, t), "path")
+				halitedebug.Line(NewLine(previous, t), "path")
 				previous = t
 			}
 
-			// log.Printf("Ship id %d", ship.ID)
-
-			// log.Printf("Path %s", path)
-
-			position := GetDirectionFromPath(&gameMap, ship, path, 8)
+			position := GetDirectionFromPath(&gameMap, ship, path, 9)
 			//log.Printf("position %s", position)
 
-			debug.Line(NewLine(ship, position), "nextStep")
+			halitedebug.Line(NewLine(ship, position), "nextStep")
 
 			return ship.NavigateBasic2(&Entity{
 				x:      position.X,
@@ -109,17 +105,17 @@ func AstarStrategy(ship *Ship, gameMap Map) string {
 
 // GetDirectionFromPath returns the tile at which you can move in straight line at the desired speed
 func GetDirectionFromPath(gameMap *Map, ship *Ship, path []*navigation.Tile, speed float64) *navigation.Tile {
-	originEntity := PositionEntityFromTile(ship, ship.id, 1)
 	previousTarget := path[0]
 	for _, tile := range path[1:] {
 		totalDistance := tile.DistanceTo(ship)
 		if totalDistance > speed {
 			return previousTarget
 		}
-		targetEntity := PositionEntityFromTile(tile, ship.id, 1)
-		blocked, _ := gameMap.ObstaclesBetween(originEntity, targetEntity)
-		debug.Line(NewLine(ship, previousTarget), "direction", "block"+strconv.FormatBool(blocked))
+		targetEntity := PositionEntityFromTile(tile, ship.id, 0)
+		blocked, collider := gameMap.ObstaclesBetween2(ship, targetEntity)
+		halitedebug.Line(NewLine(ship, targetEntity), "direction", "block"+strconv.FormatBool(blocked))
 		if blocked {
+			halitedebug.Circle(collider, "collider")
 			return previousTarget
 		}
 		previousTarget = tile

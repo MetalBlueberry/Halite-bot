@@ -105,6 +105,10 @@ func (a byY) Less(i, j int) bool { return a[i].y < a[j].y }
 // ObstaclesBetween demonstrates how the player might determine if the path
 // between two enitities is clear
 func (gameMap Map) ObstaclesBetween(start Entitier, end Entitier) (bool, Entitier) {
+	return ObstaclesBetween(start, end, gameMap.Entities)
+}
+
+func ObstaclesBetween(start Entitier, end Entitier, Obstacles []Entitier) (bool, Entitier) {
 	x1, y1 := start.Position()
 	x2, y2 := end.Position()
 	dx := x2 - x1
@@ -112,8 +116,8 @@ func (gameMap Map) ObstaclesBetween(start Entitier, end Entitier) (bool, Entitie
 	a := dx*dx + dy*dy + 1e-8
 	crossterms := x1*x1 - x1*x2 + y1*y1 - y1*y2
 
-	for i := 0; i < len(gameMap.Entities); i++ {
-		entity := gameMap.Entities[i]
+	for i := 0; i < len(Obstacles); i++ {
+		entity := Obstacles[i]
 		if entity.ID() == start.ID() || entity.ID() == end.ID() {
 			continue
 		}
@@ -121,7 +125,7 @@ func (gameMap Map) ObstaclesBetween(start Entitier, end Entitier) (bool, Entitie
 		x0, y0, radius := entity.Circle()
 
 		closestDistance := end.CalculateDistanceTo(entity)
-		if closestDistance < radius+1 {
+		if closestDistance < radius {
 			return true, entity
 		}
 
@@ -137,11 +141,89 @@ func (gameMap Map) ObstaclesBetween(start Entitier, end Entitier) (bool, Entitie
 		closestY := sy + dy*t
 		closestDistance = math.Sqrt(math.Pow(closestX-x0, 2) * +math.Pow(closestY-y0, 2))
 
-		if closestDistance <= radius+sradius+1 {
+		if closestDistance <= radius+sradius {
 			return true, entity
 		}
 	}
 	return false, nil
+}
+
+func (gameMap Map) ObstaclesBetween2(start Entitier, end Entitier) (bool, Entitier) {
+	return ObstaclesBetween2(start, end, gameMap.Entities)
+}
+
+func ObstaclesBetween2(start Entitier, end Entitier, obstacles []Entitier) (bool, Entitier) {
+	_, _, r1 := start.Circle()
+	//_, _ := end.Position()
+	StartToEnd := Distance(start, end)
+	for i := 0; i < len(obstacles); i++ {
+		entity := obstacles[i]
+		if entity.ID() == start.ID() || entity.ID() == end.ID() {
+			continue
+		}
+
+		_, _, r := entity.Circle()
+		margin := r1 + r
+		dist := DistancePointToLine(start, end, entity)
+		if dist > margin {
+			continue
+		}
+
+		projection := Project(start, end, entity)
+		relative := projection / StartToEnd
+		if relative > 0 && relative < 1 {
+			return true, entity
+		}
+
+		endDist := Distance(end, entity)
+		if endDist < margin {
+			return true, entity
+		}
+	}
+	return false, nil
+}
+
+func DistancePointToLine(A, B, P Positioner) float64 {
+	Px, Py := P.Position()
+	m, n := LineMNFrom(A, B)
+	if math.IsInf(m, 0) {
+		return math.Abs(Px - n)
+	}
+	return math.Abs(Px*m+n-Py) / math.Sqrt(m*m+1)
+}
+
+func Project(A, B, P Positioner) float64 {
+	Px, Py := P.Position()
+	Ax, Ay := A.Position()
+	Ux, Uy := UnitVector(A, B)
+	return (Px-Ax)*Ux + (Py-Ay)*Uy
+}
+
+func UnitVector(A, B Positioner) (x, y float64) {
+	Ax, Ay := A.Position()
+	Bx, By := B.Position()
+	mod := Distance(A, B)
+	return (Bx - Ax) / mod, (By - Ay) / mod
+}
+
+func Distance(A, B Positioner) float64 {
+	Ax, Ay := A.Position()
+	Bx, By := B.Position()
+	return math.Sqrt(math.Pow(Ax-Bx, 2) + math.Pow(Ay-By, 2))
+}
+
+// LineMNFrom solves line equation for y = mx+n
+// if m is infinity, n will be x = n
+func LineMNFrom(A, B Positioner) (m, n float64) {
+	Ax, Ay := A.Position()
+	Bx, By := B.Position()
+	m = (By - Ay) / (Bx - Ax)
+	if math.IsInf(m, 0) {
+		return m, Bx
+	}
+	n = Ay - Ax*m
+	//n = (Ay*Bx - Ax*By) / (Bx - Ax)
+	return m, n
 }
 
 // NearestPlanetsByDistance orders all planets based on their proximity
