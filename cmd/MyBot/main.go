@@ -99,37 +99,49 @@ func (g Game) Loop() {
 	log.Print("Game Starts")
 
 	gameMap, _ := conn.UpdateMap()
+	commander := hlt.Commander{}
+	commander.SetMap(&gameMap)
 
 	gameturn := 1
 	for {
 		var start time.Time
 		gameMap, start = conn.UpdateMap()
+		commander.SetMap(&gameMap)
 		commandQueue := []string{}
 
-		myPlayer := gameMap.Players[gameMap.MyID]
+		myPlayer := commander.Players[gameMap.MyID]
 		myShips := myPlayer.Ships
 
-		for _, p := range gameMap.Planets {
-			halitedebug.Circle(p.Entity, []string{"planet", fmt.Sprintf("player%d", int(p.Owned)*(1+p.Owner()))}...)
-		}
-		for _, player := range gameMap.Players {
-			for _, ship := range player.Ships {
-				halitedebug.Circle(ship.Entity, []string{"ship", fmt.Sprintf("player%d", 1+ship.Owner())}...)
-			}
-		}
+		PrintDebugEntities(gameMap)
 
 		for i := 0; i < len(myShips); i++ {
 			shipStart := time.Now()
 			ship := myShips[i]
 			if ship.DockingStatus == hlt.UNDOCKED {
-				commandQueue = append(commandQueue, hlt.AstarStrategy(ship, gameMap))
+				commandQueue = append(commandQueue, hlt.AstarStrategy(ship, commander))
 			}
 			log.Printf("Time for ship %s, total %s", time.Since(shipStart), time.Since(start))
 		}
 
 		log.Printf("Turn %v\n", gameturn)
+		log.Printf("out %v\n", commandQueue)
 		conn.SubmitCommands(commandQueue)
 		halitedebug.Send(gameturn)
 		gameturn++
 	}
+}
+
+func PrintDebugEntities(gameMap hlt.Map) {
+	for _, p := range gameMap.Planets {
+		halitedebug.Circle(p.Entity, []string{"planet", fmt.Sprintf("player%d", int(p.Owned)*(1+p.Owner()))}...)
+	}
+	for _, ship := range gameMap.Ships {
+		halitedebug.Circle(ship.Entity, []string{"ship", fmt.Sprintf("player%d", 1+ship.Owner())}...)
+	}
+	//for _, player := range gameMap.Players {
+	//for _, ship := range player.Ships {
+	//halitedebug.Circle(ship.Entity, []string{"ship", fmt.Sprintf("player%d", 1+ship.Owner())}...)
+	//}
+	//}
+
 }

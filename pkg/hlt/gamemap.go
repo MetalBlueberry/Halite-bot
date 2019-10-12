@@ -14,6 +14,7 @@ type Map struct {
 	MyID, Width, Height int
 	Planets             []*Planet
 	Players             []*Player
+	Ships               map[int]*Ship
 	Entities            []Entitier
 	Grid                *navigation.Grid
 }
@@ -56,6 +57,7 @@ func ParseGameString(c *Connection, gameString string) Map {
 		Height:   c.height,
 		Planets:  nil,
 		Players:  make([]*Player, numPlayers),
+		Ships:    make(map[int]*Ship),
 		Entities: make([]Entitier, 0),
 		Grid:     navigation.NewGrid(c.width, c.height),
 	}
@@ -67,6 +69,7 @@ func ParseGameString(c *Connection, gameString string) Map {
 		for j := 0; j < len(player.Ships); j++ {
 			ship := player.Ships[j].Entity
 			gameMap.Entities = append(gameMap.Entities, player.Ships[j].Entity)
+			gameMap.Ships[player.Ships[j].id] = player.Ships[j]
 			if player.ID == gameMap.MyID {
 				gameMap.Grid.PaintShip(ship.x, ship.y, 0)
 			} else {
@@ -246,3 +249,26 @@ type byDist []*Planet
 func (a byDist) Len() int           { return len(a) }
 func (a byDist) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a byDist) Less(i, j int) bool { return a[i].Distance < a[j].Distance }
+
+// NearestPlanetsByDistance orders all planets based on their proximity
+// to a given ship from nearest for farthest
+func (gameMap Map) NearestPlanetsByValue(ship *Ship) []*Planet {
+	planets := gameMap.Planets
+
+	for i := 0; i < len(planets); i++ {
+
+		planets[i].Distance = ship.CalculateDistanceTo(planets[i].Entity)
+	}
+
+	sort.Sort(byValue(planets))
+
+	return planets
+}
+
+type byValue []*Planet
+
+func (a byValue) Len() int      { return len(a) }
+func (a byValue) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a byValue) Less(i, j int) bool {
+	return a[i].Distance*a[i].RemainingResources < a[j].Distance*a[i].Distance
+}

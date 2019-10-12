@@ -45,62 +45,66 @@ func (l Line) Line() (float64, float64, float64, float64) {
 	return l.X1, l.Y1, l.X2, l.Y2
 }
 
-func AstarStrategy(ship *Ship, gameMap Map) string {
+func AstarStrategy(ship *Ship, gameMap Commander) string {
 	planets := gameMap.NearestPlanetsByDistance(ship)
 
-	for _, planet := range planets {
-		if (planet.Owned == 0 || planet.owner == gameMap.MyID) && planet.NumDockedShips < planet.NumDockingSpots {
-			if ship.CanDock(planet) {
-				return ship.Dock(planet)
-			}
-			target := ship.ClosestPointTo(planet.Entity, 2)
-
-			//log.Printf("Planet %v, Point %v", planet.Entity, target)
-			from := gameMap.Grid.GetTile(ship.x, ship.y)
-			to := gameMap.Grid.GetTile(target.x, target.y)
-			path, _, _, _ := gameMap.Grid.Path(from, to, -1)
-
-			previous := from
-			for _, t := range path {
-				halitedebug.Line(NewLine(previous, t), "path")
-				previous = t
-			}
-
-			position := GetDirectionFromPath(&gameMap, ship, path, 9)
-			//log.Printf("position %s", position)
-
-			halitedebug.Line(NewLine(ship, position), "nextStep")
-
-			return ship.NavigateBasic2(&Entity{
-				x:      position.X,
-				y:      position.Y,
-				radius: 0,
-			}, gameMap)
-		}
+	if ship.CanDock(planets[0]) {
+		return ship.Dock(planets[0])
 	}
 
-	//for _, planet := range planets {
-	//if planet.Owned == 1 && planet.Owner != gameMap.MyID {
-	//target := ship.ClosestPointTo(planet.Entity, 2)
-	//for _, docked := range planet.DockedShips {
-	//if ship.CalculateDistanceTo(docked.Entity) < ship.CalculateDistanceTo(target) {
-	//target = ship.ClosestPointTo(docked.Entity, docked.Entity.Radius+1)
-	//}
-	//}
+	target := gameMap.FindTarget(ship, planets)
 
-	//from := gameMap.Grid.GetTile(ship.X, ship.Y)
-	//to := gameMap.Grid.GetTile(target.X, target.Y)
-	//_, _, _, path := gameMap.Grid.Path(from, to, 10000)
-	//position := GetDirectionFromPath(&gameMap, ship, path, 7)
-	//return ship.NavigateBasic2(Entity{
-	//X:      position.X,
-	//Y:      position.Y,
-	//Radius: 0,
-	//}, gameMap)
-	//}
-	//}
+	if target == nil {
+		return ""
+	}
+	targetEntity, ok := target.(Entitier)
+	if ok {
+		target = ship.ClosestPointTo(targetEntity, 2)
+	}
 
-	return ""
+	return gameMap.Navigate(ship, target)
+
+}
+
+func (gameMap Commander) FindTarget(ship *Ship, planets []*Planet) Positioner {
+	for _, planet := range planets {
+		if (planet.Owned == 0 || planet.owner == gameMap.MyID) && planet.NumDockedShips < planet.NumDockingSpots {
+			return planet
+		}
+	}
+	for _, planet := range planets {
+		if planet.owner != gameMap.MyID {
+			for _, enemy := range planet.DockedShipIDs {
+				return gameMap.Ships[enemy]
+			}
+		}
+	}
+	return nil
+}
+
+func (gameMap Map) Navigate(ship *Ship, target Positioner) string {
+	x, y := target.Position()
+	//log.Printf("Planet %v, Point %v", planet.Entity, target)
+	from := gameMap.Grid.GetTile(ship.x, ship.y)
+	to := gameMap.Grid.GetTile(x, y)
+	path, _, _, _ := gameMap.Grid.Path(from, to, -1)
+
+	previous := from
+	for _, t := range path {
+		halitedebug.Line(NewLine(previous, t), "path")
+		previous = t
+	}
+
+	position := GetDirectionFromPath(&gameMap, ship, path, 9)
+	//log.Printf("position %s", position)
+
+	halitedebug.Line(NewLine(ship, position), "nextStep")
+
+	return ship.NavigateBasic2(&Entity{
+		x:      position.X,
+		y:      position.Y,
+		radius: 0,
+	}, gameMap)
 }
 
 // GetDirectionFromPath returns the tile at which you can move in straight line at the desired speed

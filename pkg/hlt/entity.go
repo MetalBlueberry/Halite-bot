@@ -115,6 +115,7 @@ func (entity *Entity) CalculateRadAngleTo(target Positioner) float64 {
 
 // ClosestPointTo returns the closest point that is at least minDistance from the target
 func (entity *Entity) ClosestPointTo(target Entitier, minDitance float64) *Entity {
+
 	tx, ty, radius := target.Circle()
 	dist := radius + minDitance
 	norm := target.CalculateDistanceTo(entity)
@@ -282,9 +283,15 @@ func (ship *Ship) NavigateBasic2(target Positioner, gameMap Map) string {
 }
 
 // CanDock indicates that a ship is close enough to a given planet to dock
-func (ship *Ship) CanDock(planet Entitier) bool {
+func (ship *Ship) CanDock(planet *Planet) bool {
+	owner := planet.Owner()
+	if owner != 0 && owner != ship.owner {
+		return false
+	}
+	if planet.NumDockedShips == planet.NumDockingSpots {
+		return false
+	}
 	dist := ship.CalculateDistanceTo(planet)
-
 	_, _, radius := planet.Circle()
 	return dist <= (ship.radius + radius + 4)
 }
