@@ -71,14 +71,19 @@ func (gameMap Commander) FindTarget(ship *Ship, planets []*Planet) Positioner {
 		if (planet.Owned == 0 || planet.owner == gameMap.MyID) && planet.NumDockedShips < planet.NumDockingSpots {
 			return planet
 		}
-	}
-	for _, planet := range planets {
 		if planet.owner != gameMap.MyID {
 			for _, enemy := range planet.DockedShipIDs {
 				return gameMap.Ships[enemy]
 			}
 		}
 	}
+	//for _, planet := range planets {
+	//if planet.owner != gameMap.MyID {
+	//for _, enemy := range planet.DockedShipIDs {
+	//return gameMap.Ships[enemy]
+	//}
+	//}
+	//}
 	return nil
 }
 
