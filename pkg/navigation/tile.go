@@ -11,11 +11,11 @@ type TileType int
 
 const (
 	Empty      TileType = 0
-	SafeMargin TileType = 1
-	Walked     TileType = 2
-	ShotRange  TileType = 3
-	ShotRange2 TileType = 6
-	ShotRange3 TileType = 9
+	SafeMargin TileType = 2
+	Walked     TileType = 4
+	ShotRange  TileType = 6
+	ShotRange2 TileType = 12
+	ShotRange3 TileType = 18
 	Ship       TileType = 1000
 	Blocked    TileType = 1000000
 )
