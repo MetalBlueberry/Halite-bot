@@ -32,7 +32,7 @@ func NewGrid(Width, Height int) *Grid {
 
 func (g *Grid) PaintShip(X float64, Y float64, shotRange float64) {
 	g.Paint(X, Y, shotRange, ShotRange)
-	g.Paint(X, Y, 1.5, Ship)
+	g.Paint(X, Y, 1.0, Ship)
 }
 
 func (g *Grid) PaintPlanet(X float64, Y float64, radius float64) {
