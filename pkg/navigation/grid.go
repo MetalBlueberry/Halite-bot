@@ -36,8 +36,8 @@ func (g *Grid) PaintShip(X float64, Y float64, shotRange float64) {
 }
 
 func (g *Grid) PaintPlanet(X float64, Y float64, radius float64) {
-	g.Paint(X, Y, radius+1, SafeMargin)
-	g.Paint(X, Y, radius, Blocked)
+	g.Paint(X, Y, radius+3, SafeMargin)
+	g.Paint(X, Y, radius+1, Blocked)
 }
 
 func (g *Grid) Paint(X float64, Y float64, radius float64, value TileType) {

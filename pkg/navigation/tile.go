@@ -65,12 +65,15 @@ func (t *Tile) DistanceTo(other Positioner) float64 {
 // PathNeighbors returns the direct neighboring nodes of this node which
 // can be pathed to.
 func (t *Tile) PathNeighbors() []astar.Pather {
+	if t.Type == Blocked {
+		return nil
+	}
 	neighbors := make([]astar.Pather, 0, 4)
 
-	appendIfNotNull := func(item astar.Pather) {
+	appendIfValid := func(item astar.Pather) {
 		switch v := item.(type) {
 		case *Tile:
-			if v != nil {
+			if v != nil && v.Type != Blocked {
 				neighbors = append(neighbors, v)
 			}
 		default:
@@ -79,22 +82,22 @@ func (t *Tile) PathNeighbors() []astar.Pather {
 	}
 
 	up := t.Grid.GetTile(t.X, t.Y-1)
-	appendIfNotNull(up)
+	appendIfValid(up)
 	down := t.Grid.GetTile(t.X, t.Y+1)
-	appendIfNotNull(down)
+	appendIfValid(down)
 	left := t.Grid.GetTile(t.X-1, t.Y)
-	appendIfNotNull(left)
+	appendIfValid(left)
 	right := t.Grid.GetTile(t.X+1, t.Y)
-	appendIfNotNull(right)
+	appendIfValid(right)
 
 	upleft := t.Grid.GetTile(t.X-1, t.Y-1)
-	appendIfNotNull(upleft)
+	appendIfValid(upleft)
 	upright := t.Grid.GetTile(t.X+1, t.Y-1)
-	appendIfNotNull(upright)
+	appendIfValid(upright)
 	downleft := t.Grid.GetTile(t.X-1, t.Y+1)
-	appendIfNotNull(downleft)
+	appendIfValid(downleft)
 	downright := t.Grid.GetTile(t.X+1, t.Y+1)
-	appendIfNotNull(downright)
+	appendIfValid(downright)
 	return neighbors
 }
 
