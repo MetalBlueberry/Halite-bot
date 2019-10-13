@@ -19,7 +19,7 @@ var addr = flag.String("addr", "localhost:8080", "http service address")
 
 func main() {
 	var server = flag.Bool("server", true, "if passed, the bot runs a websocket server, compatible with stdinToWebsocket")
-	var botName = flag.String("name", "Unity", "The name for the bot in local games")
+	var botName = flag.String("name", "Unity:"+UnityVersion, "The name for the bot in local games")
 	var logToFile = flag.Bool("logToFile", false, "log to file, true if server is false")
 	var debugf = flag.Bool("debug", true, "prints to stdout debug information to be used with halite-debug project")
 	flag.Parse()
