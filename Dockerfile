@@ -6,6 +6,8 @@ COPY go.sum .
 COPY cmd/ cmd/
 COPY pkg/ pkg/
 
+RUN go test ./...
+
 WORKDIR cmd/MyBot
 
 RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go install

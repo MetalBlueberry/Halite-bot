@@ -513,7 +513,7 @@ var _ = Describe("Gamemap", func() {
 			Expect(projection).To(BeNumerically("~", -math.Sqrt(2), 0.001))
 		})
 	})
-	FDescribe("Testing ObstaclesBetween", func() {
+	Describe("Testing ObstaclesBetween", func() {
 		var (
 			obstacles []Entitier
 		)
