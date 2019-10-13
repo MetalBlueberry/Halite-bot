@@ -8,11 +8,9 @@ import (
 
 	"github.com/gorilla/websocket"
 	halitedebug "github.com/metalblueberry/Halite-debug/pkg/client"
-
-	"runtime/debug"
-
 	"github.com/metalblueberry/halite-bot/pkg/hlt"
 	log "github.com/sirupsen/logrus"
+	"runtime/debug"
 )
 
 var addr = flag.String("addr", "localhost:8080", "http service address")
