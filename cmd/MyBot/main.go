@@ -115,14 +115,15 @@ func (g Game) Loop() {
 		PrintDebugEntities(gameMap)
 
 		for i := 0; i < len(myShips); i++ {
-			shipStart := time.Now()
+			//shipStart := time.Now()
 			ship := myShips[i]
 			if ship.DockingStatus == hlt.UNDOCKED {
 				commandQueue = append(commandQueue, hlt.AstarStrategy(ship, commander))
 			}
-			log.Printf("Time for ship %s, total %s", time.Since(shipStart), time.Since(start))
+			//log.Printf("Time for ship %s, total %s", time.Since(shipStart), time.Since(start))
 		}
 
+		log.Printf("Turn time %s, avg per ship %f", time.Since(start), time.Since(start).Seconds()/float64(len(myShips)))
 		log.Printf("Turn %v\n", gameturn)
 		log.Printf("out %v\n", commandQueue)
 		conn.SubmitCommands(commandQueue)
@@ -138,10 +139,4 @@ func PrintDebugEntities(gameMap hlt.Map) {
 	for _, ship := range gameMap.Ships {
 		halitedebug.Circle(ship.Entity, []string{"ship", fmt.Sprintf("player%d", 1+ship.Owner())}...)
 	}
-	//for _, player := range gameMap.Players {
-	//for _, ship := range player.Ships {
-	//halitedebug.Circle(ship.Entity, []string{"ship", fmt.Sprintf("player%d", 1+ship.Owner())}...)
-	//}
-	//}
-
 }

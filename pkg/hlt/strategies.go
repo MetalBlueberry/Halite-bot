@@ -57,9 +57,10 @@ func AstarStrategy(ship *Ship, gameMap Commander) string {
 	if target == nil {
 		return ""
 	}
-	targetEntity, ok := target.(Entitier)
-	if ok {
-		target = ship.ClosestPointTo(targetEntity, 2)
+
+	switch targetType := target.(type) {
+	case *Planet:
+		target = ship.ClosestPointTo(targetType, 2)
 	}
 
 	return gameMap.Navigate(ship, target)
@@ -92,12 +93,22 @@ func (gameMap Map) Navigate(ship *Ship, target Positioner) string {
 	//log.Printf("Planet %v, Point %v", planet.Entity, target)
 	from := gameMap.Grid.GetTile(ship.x, ship.y)
 	to := gameMap.Grid.GetTile(x, y)
-	path, _, _, _ := gameMap.Grid.Path(from, to, -1)
+	_, _, found, path := gameMap.Grid.Path(from, to, 300)
+	// Path not found
+	if !found {
+		halitedebug.Line(NewLine(from, to), "notFound")
+	}
 
-	previous := from
-	for _, t := range path {
-		halitedebug.Line(NewLine(previous, t), "path")
-		previous = t
+	{
+		previous := from
+		for _, t := range path {
+			halitedebug.Line(NewLine(previous, t), "path")
+			previous = t
+		}
+	}
+
+	if len(path) == 0 {
+		return ""
 	}
 
 	position := GetDirectionFromPath(&gameMap, ship, path, 9)

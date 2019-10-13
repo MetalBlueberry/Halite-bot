@@ -252,8 +252,8 @@ func (a byDist) Less(i, j int) bool { return a[i].Distance < a[j].Distance }
 
 // NearestPlanetsByDistance orders all planets based on their proximity
 // to a given ship from nearest for farthest
-func (gameMap Map) NearestPlanetsByValue(ship *Ship) []*Planet {
-	planets := gameMap.Planets
+func (command Commander) NearestPlanetsByValue(ship *Ship) []*Planet {
+	planets := command.Planets
 
 	for i := 0; i < len(planets); i++ {
 
@@ -270,5 +270,5 @@ type byValue []*Planet
 func (a byValue) Len() int      { return len(a) }
 func (a byValue) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a byValue) Less(i, j int) bool {
-	return a[i].Distance*a[i].RemainingResources < a[j].Distance*a[i].Distance
+	return a[i].Distance < a[j].Distance*a[i].Distance
 }
