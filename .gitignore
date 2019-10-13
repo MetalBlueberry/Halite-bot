@@ -4,3 +4,8 @@ main
 cmd/canvas/canvas
 cmd/stdinToWebsocket/stdinToWebsocket
 cmd/MyBot/MyBot
+.vscode
+save
+*.exe
+*.tar.gz
+
