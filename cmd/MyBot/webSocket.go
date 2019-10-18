@@ -36,13 +36,13 @@ func (ws *WebSocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	game.Loop()
 }
 
-func (ws *WebSocketHandler) CreateServer() {
+func (ws *WebSocketHandler) CreateServer(addr string) {
 	log.Print("Waiting for games")
 	if ws.LogToFile {
 		log.Print("The the game log will be saved to a file")
 	}
 	http.Handle("/echo", ws)
-	log.Fatal(http.ListenAndServe(*addr, nil))
+	log.Fatal(http.ListenAndServe(addr, nil))
 }
 
 func (ws *WebSocketHandler) ListenForGameUpdates(response <-chan string, socket *websocket.Conn) {
