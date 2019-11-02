@@ -58,10 +58,10 @@ var _ = Describe("Grid", func() {
 			X := 5
 			Y := 5
 			grid := navigation.NewGrid(X, Y)
-			testTile := &navigation.Tile{}
 			for x := 0; x < X; x++ {
 				for y := 0; y < Y; y++ {
-					grid.SetTile(float64(x), float64(y), testTile)
+					testTile := navigation.NewTile(x, y, navigation.Empty, nil)
+					grid.SetTile(testTile)
 					tile := grid.GetTile(float64(x), float64(y))
 					Expect(tile).To(Equal(testTile))
 				}

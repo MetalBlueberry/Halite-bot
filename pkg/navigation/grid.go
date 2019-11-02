@@ -83,7 +83,8 @@ func (g *Grid) GetTileSafe(x, y float64) *Tile {
 	return tile
 }
 
-func (g *Grid) SetTile(x, y float64, tile *Tile) {
+func (g *Grid) SetTile(tile *Tile) {
+	x, y := tile.Position()
 	if x < 0 || x >= float64(g.Width) || y < 0 || y >= float64(g.Height) {
 		log.Panicf("Index out of range \nx:%f y:%f\nw:%d h:%d\n", x, y, g.Width, g.Height)
 	}
