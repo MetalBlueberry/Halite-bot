@@ -4,6 +4,7 @@ import (
 	"context"
 	"sort"
 
+	halitedebug "github.com/metalblueberry/Halite-debug/pkg/client"
 	"github.com/metalblueberry/halite-bot/pkg/hlt"
 	"github.com/metalblueberry/halite-bot/pkg/navigation"
 	"github.com/metalblueberry/halite-bot/pkg/twoD"
@@ -26,6 +27,10 @@ func (c *Commander) PreCalculations() {
 		for _, ship := range player.Ships {
 			closestPlanet := c.GetPlanetsByDistance(ship)[0]
 			closestPlanet.InOrbitShips = append(closestPlanet.InOrbitShips, ship)
+
+			if ship.Owner() == c.gameMap.MyID {
+				c.Pilots[ship.ID()].ClosestPlanet = closestPlanet
+			}
 		}
 	}
 }
@@ -62,15 +67,35 @@ func (c *Commander) Command(ctx context.Context) {
 			}
 		}
 
-		pilot.Command = c.Navigate(pilot, target)
+		//log.Printf("position %s", position)
+
+		path, err := c.CalculatePath(pilot, target)
+		if err != nil {
+			continue
+		}
+
+		turnpath := GetPathForTurn(c.gameMap, pilot, path, 8)
+		for _, step := range turnpath {
+			step.Type = navigation.Blocked
+		}
+
+		if len(turnpath) == 0 {
+			continue
+		}
+
+		halitedebug.Line(twoD.NewLine(pilot, turnpath[len(turnpath)-1]), "nextStep")
+
+		pilot.Command = pilot.NavigateBasic(turnpath[len(turnpath)-1])
 	}
 }
 
 type byHealth []*Pilot
 
-func (a byHealth) Len() int           { return len(a) }
-func (a byHealth) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a byHealth) Less(i, j int) bool { return a[i].Health() < a[j].Health() }
+func (a byHealth) Len() int      { return len(a) }
+func (a byHealth) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a byHealth) Less(i, j int) bool {
+	return a[i].Health() < a[j].Health() || (a[i].Health() == a[j].Health() && a[i].ID() < a[j].ID())
+}
 
 func NewCommander() *Commander {
 	return &Commander{

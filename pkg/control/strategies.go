@@ -3,6 +3,7 @@ package control
 import (
 	//log "github.com/sirupsen/logrus"
 
+	"errors"
 	"strconv"
 
 	halitedebug "github.com/metalblueberry/Halite-debug/pkg/client"
@@ -13,6 +14,16 @@ import (
 )
 
 func (c *Commander) FindTarget(pilot *Pilot) twoD.Positioner {
+
+	// if Pilot can fight, look for trouble
+	if pilot.Health() > 255/4 && pilot.ClosestPlanet.Owner() == c.gameMap.MyID {
+		for _, inOrbitShip := range pilot.ClosestPlanet.InOrbitShips {
+			if inOrbitShip.Owner() != c.gameMap.MyID {
+				return inOrbitShip
+			}
+		}
+	}
+
 	planets := c.GetPlanetsByImportance(pilot)
 
 	for _, planet := range planets {
@@ -42,7 +53,7 @@ func (c *Commander) FindTarget(pilot *Pilot) twoD.Positioner {
 	return nil
 }
 
-func (gameMap *Commander) Navigate(pilot *Pilot, target twoD.Positioner) string {
+func (gameMap *Commander) CalculatePath(pilot *Pilot, target twoD.Positioner) ([]*navigation.Tile, error) {
 	// If target has a radius, calculate a near position with a margin
 	switch targetType := target.(type) {
 	case twoD.Circler:
@@ -68,32 +79,24 @@ func (gameMap *Commander) Navigate(pilot *Pilot, target twoD.Positioner) string 
 	}
 
 	if len(path) == 0 {
-		return ""
+		return nil, errors.New("Path not found")
 	}
-
-	position := GetDirectionFromPath(gameMap.gameMap, pilot, path, 9)
-	//log.Printf("position %s", position)
-
-	halitedebug.Line(twoD.NewLine(pilot, position), "nextStep")
-
-	return pilot.NavigateBasic(position)
+	return path, nil
 }
 
-// GetDirectionFromPath returns the tile at which you can move in straight line at the desired speed
-func GetDirectionFromPath(gameMap hlt.Map, pilot *Pilot, path []*navigation.Tile, speed float64) *navigation.Tile {
-	previousTarget := path[0]
-	for _, tile := range path[1:] {
+// GetPathForTurn returns the tile at which you can move in straight line at the desired speed
+func GetPathForTurn(gameMap hlt.Map, pilot *Pilot, path []*navigation.Tile, speed float64) []*navigation.Tile {
+	for i, tile := range path[0:] {
 		totalDistance := tile.DistanceTo(pilot)
 		if totalDistance > speed {
-			return previousTarget
+			return path[0:i]
 		}
 		blocked, collider := gameMap.ObstaclesBetween(pilot, tile, pilot.ID())
 		halitedebug.Line(twoD.NewLine(pilot, tile), "direction", "block"+strconv.FormatBool(blocked))
 		if blocked {
 			halitedebug.Circle(collider, "collider")
-			return previousTarget
+			return path[0:i]
 		}
-		previousTarget = tile
 	}
-	return previousTarget
+	return path
 }
