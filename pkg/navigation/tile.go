@@ -45,6 +45,15 @@ type Tile struct {
 	Grid *Grid
 }
 
+func NewTile(x, y int, Type TileType, Grid *Grid) *Tile {
+	return &Tile{
+		X:    float64(x),
+		Y:    float64(y),
+		Type: Type,
+		Grid: Grid,
+	}
+}
+
 func (t *Tile) Position() (x, y float64) {
 	return t.X, t.Y
 }
