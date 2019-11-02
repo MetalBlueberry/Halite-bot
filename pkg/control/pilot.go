@@ -8,6 +8,7 @@ import (
 type Pilot struct {
 	hlt.Ship
 	Command         string
+	ClosestPlanet   *PlanetStats
 	lastTurnUpdated int
 	target          twoD.Positioner
 }
