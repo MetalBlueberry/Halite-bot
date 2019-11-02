@@ -43,5 +43,6 @@ func (stats *PlanetStats) setValueToImportance(pilot *Pilot) {
 }
 
 func (stats *PlanetStats) setValueToDistance(pos twoD.Positioner) {
-	stats.Value = twoD.Distance(stats, pos)
+	_, _, radius := stats.Planet.Circle()
+	stats.Value = twoD.Distance(stats, pos) - radius
 }
