@@ -56,7 +56,7 @@ var _ = Describe("Gamemap", func() {
 					Id: -1,
 				}
 				obstacles = append(obstacles, origin, target)
-				collides, collider := ObstaclesBetween2(origin, target, obstacles, origin.ID(), target.ID())
+				collides, collider := ObstaclesBetween(origin, target, obstacles, origin.ID(), target.ID())
 				Expect(collides).To(BeTrue())
 				Expect(collider).To(Equal(obstacles[0]))
 			})
@@ -74,7 +74,7 @@ var _ = Describe("Gamemap", func() {
 					Id: -1,
 				}
 				obstacles = append(obstacles, origin, target)
-				collides, collider := ObstaclesBetween2(origin, target, obstacles, origin.ID(), target.ID())
+				collides, collider := ObstaclesBetween(origin, target, obstacles, origin.ID(), target.ID())
 				Expect(collides).To(BeTrue())
 				Expect(collider).To(Equal(obstacles[0]))
 			})
@@ -92,7 +92,7 @@ var _ = Describe("Gamemap", func() {
 					Id: -1,
 				}
 				obstacles = append(obstacles, origin, target)
-				collides, collider := ObstaclesBetween2(origin, target, obstacles, origin.ID(), target.ID())
+				collides, collider := ObstaclesBetween(origin, target, obstacles, origin.ID(), target.ID())
 				Expect(collides).To(BeTrue())
 				Expect(collider).To(Equal(obstacles[0]))
 			})
@@ -110,7 +110,7 @@ var _ = Describe("Gamemap", func() {
 					Id: -1,
 				}
 				obstacles = append(obstacles, origin, target)
-				collides, collider := ObstaclesBetween2(origin, target, obstacles, origin.ID(), target.ID())
+				collides, collider := ObstaclesBetween(origin, target, obstacles, origin.ID(), target.ID())
 				Expect(collides).To(BeFalse())
 				Expect(collider).To(BeNil())
 			})
@@ -146,7 +146,7 @@ var _ = Describe("Gamemap", func() {
 					Id: -1,
 				}
 				obstacles = append(obstacles, origin, target)
-				collides, collider := ObstaclesBetween2(origin, target, obstacles, origin.ID(), target.ID())
+				collides, collider := ObstaclesBetween(origin, target, obstacles, origin.ID(), target.ID())
 				Expect(collides).To(BeTrue())
 				Expect(collider).To(Equal(obstacles[0]))
 			})
@@ -165,7 +165,7 @@ var _ = Describe("Gamemap", func() {
 				}
 
 				obstacles = append(obstacles, origin)
-				collides, collider := ObstaclesBetween2(origin, target, obstacles, origin.ID(), target.ID())
+				collides, collider := ObstaclesBetween(origin, target, obstacles, origin.ID(), target.ID())
 				Expect(collides).To(BeTrue())
 				Expect(collider).To(Equal(obstacles[0]))
 			})
@@ -183,7 +183,7 @@ var _ = Describe("Gamemap", func() {
 					Id: 0,
 				}
 				obstacles = append(obstacles, origin, target)
-				collides, collider := ObstaclesBetween2(origin, target, obstacles, origin.ID(), target.ID())
+				collides, collider := ObstaclesBetween(origin, target, obstacles, origin.ID(), target.ID())
 				Expect(collides).To(BeTrue())
 				Expect(collider).To(Equal(obstacles[1]))
 			})
