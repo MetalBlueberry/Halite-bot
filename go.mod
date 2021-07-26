@@ -3,7 +3,7 @@ module github.com/metalblueberry/halite-bot
 go 1.12
 
 require (
-	github.com/gorilla/websocket v1.4.0
+	github.com/gorilla/websocket v1.4.1
 	github.com/metalblueberry/Halite-debug v0.1.3
 	github.com/onsi/ginkgo v1.8.0
 	github.com/onsi/gomega v1.5.0
